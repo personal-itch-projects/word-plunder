@@ -21,6 +21,13 @@ func add_letter(letter_node: Node2D) -> void:
 	_arrange_letters()
 	_update_scorable()
 
+func insert_letter_at(letter_node: Node2D, index: int) -> void:
+	index = clampi(index, 0, letters.size())
+	letters.insert(index, letter_node)
+	add_child(letter_node)
+	_arrange_letters()
+	_update_scorable()
+
 func _arrange_letters() -> void:
 	var cols := letters.size()
 	for i in letters.size():

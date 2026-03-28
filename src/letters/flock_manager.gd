@@ -55,7 +55,16 @@ func add_letter_to_flock(flock: Node2D, letter_char: String, from_pos: Vector2) 
 	new_letter.set_script(FallingLetterScript)
 	new_letter.letter = letter_char
 	new_letter.velocity = Vector2.ZERO
-	flock.add_letter(new_letter)
+	var index := _find_insertion_index(flock, from_pos)
+	flock.insert_letter_at(new_letter, index)
+
+func _find_insertion_index(flock: Node2D, proj_global_pos: Vector2) -> int:
+	var proj_x := proj_global_pos.x
+	for i in flock.letters.size():
+		var letter_global_x: float = flock.global_position.x + flock.letters[i].position.x
+		if proj_x < letter_global_x:
+			return i
+	return flock.letters.size()
 
 func _check_bottom() -> void:
 	if GameManager.current_state != GameState.State.PLAYING:
