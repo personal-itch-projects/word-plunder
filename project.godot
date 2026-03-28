@@ -10,17 +10,24 @@ config_version=5
 
 [application]
 
-config/name="New Game Project"
+config/name="Letter Fall"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
+run/main_scene="res://src/game_scene/main.tscn"
+
+[autoload]
+
+GameManager="*res://src/singletons/game_manager.gd"
+
+[display]
+
+window/size/viewport_width=1152
+window/size/viewport_height=648
+window/stretch/mode="canvas_items"
 
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/godot_mcp/plugin.cfg")
-
-[physics]
-
-3d/physics_engine="Jolt Physics"
 
 [rendering]
 
