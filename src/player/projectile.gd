@@ -34,7 +34,7 @@ func _process(delta: float) -> void:
 	var proj_rect := Rect2(position - Vector2(SIZE / 2, SIZE / 2), Vector2(SIZE, SIZE))
 	var hit_flock: Node2D = flock_manager.check_projectile_collision(proj_rect, letter)
 	if hit_flock:
-		flock_manager.add_letter_to_flock(hit_flock, letter, global_position)
+		flock_manager.add_letter_to_flock(hit_flock, letter, global_position, velocity)
 		queue_free()
 		return
 

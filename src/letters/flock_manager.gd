@@ -23,7 +23,8 @@ func _try_click_flock(click_pos: Vector2) -> void:
 	for i in range(flocks.size() - 1, -1, -1):
 		var flock: Node2D = flocks[i]
 		if flock.scorable and flock.get_bounding_rect().has_point(click_pos):
-			var score := _calculate_score(flock.matched_word.length(), flock.matched_frequency)
+			var best := flock._get_best_word()
+			var score := _calculate_score(best["word"].length(), best["frequency"])
 			GameManager.add_score(score)
 			_remove_flock(i)
 			get_viewport().set_input_as_handled()
@@ -40,15 +41,9 @@ func create_flock(letter_nodes: Array[Node2D], spawn_pos: Vector2) -> Node2D:
 	var flock := Node2D.new()
 	flock.set_script(flock_scene)
 	flock.position = spawn_pos
-	for letter_node in letter_nodes:
-		letter_node.position = Vector2.ZERO
-		letter_node.velocity = Vector2.ZERO
-		flock.add_child(letter_node)
-		flock.letters.append(letter_node)
-	if flock.letters.size() > 1:
-		flock._arrange_letters()
-	flock._update_scorable()
 	add_child(flock)
+	for letter_node in letter_nodes:
+		flock.add_letter(letter_node)
 	flocks.append(flock)
 	return flock
 
@@ -58,30 +53,18 @@ func check_projectile_collision(proj_rect: Rect2, proj_letter: String) -> Node2D
 			return flock
 	return null
 
-func add_letter_to_flock(flock: Node2D, letter_char: String, from_pos: Vector2) -> void:
+func add_letter_to_flock(flock: Node2D, letter_char: String, from_pos: Vector2, proj_velocity: Vector2 = Vector2.ZERO) -> void:
 	var FallingLetterScript := preload("res://src/letters/falling_letter.gd")
 	var new_letter := Node2D.new()
 	new_letter.set_script(FallingLetterScript)
 	new_letter.letter = letter_char
 	new_letter.velocity = Vector2.ZERO
-	var index := _find_insertion_index(flock, from_pos)
-	flock.insert_letter_at(new_letter, index)
-	if not flock.scorable:
-		var letter_chars: Array[String] = []
-		for l in flock.letters:
-			letter_chars.append(l.letter)
-		if not WordDictionary.can_extend_to_word(letter_chars):
-			var flock_idx := flocks.find(flock)
-			if flock_idx >= 0:
-				_remove_flock(flock_idx)
-
-func _find_insertion_index(flock: Node2D, proj_global_pos: Vector2) -> int:
-	var proj_x := proj_global_pos.x
-	for i in flock.letters.size():
-		var letter_global_x: float = flock.global_position.x + flock.letters[i].position.x
-		if proj_x < letter_global_x:
-			return i
-	return flock.letters.size()
+	flock.add_letter(new_letter)
+	flock.apply_push(proj_velocity)
+	if flock.letters.size() >= WordDictionary.MIN_WORD_LENGTH and flock.possible_words.is_empty():
+		var flock_idx := flocks.find(flock)
+		if flock_idx >= 0:
+			_remove_flock(flock_idx)
 
 func _check_bottom() -> void:
 	if GameManager.current_state != GameState.State.PLAYING:
