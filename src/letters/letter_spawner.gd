@@ -1,9 +1,5 @@
 extends Node2D
 
-const ALPHABET := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-const MIN_INTERVAL := 0.8
-const MAX_INTERVAL := 2.0
-
 var spawn_timer: float = 0.0
 var next_interval: float = 1.0
 var spawning: bool = false
@@ -36,10 +32,13 @@ func _spawn_letter() -> void:
 	var FallingLetterScript := preload("res://src/letters/falling_letter.gd")
 	var letter_node := Node2D.new()
 	letter_node.set_script(FallingLetterScript)
-	var rand_letter := ALPHABET[randi() % ALPHABET.length()]
+	var cfg: Dictionary = GameManager.get_level_config()
+	var allowed: String = cfg["allowed_letters"]
+	var rand_letter := allowed[randi() % allowed.length()]
 	var x_pos := randf_range(40, screen_width - 40)
 	letter_node.setup(rand_letter, Vector2(x_pos, -30))
 	flock_manager.create_flock_for_letter(letter_node)
 
 func _randomize_interval() -> void:
-	next_interval = randf_range(MIN_INTERVAL, MAX_INTERVAL)
+	var cfg: Dictionary = GameManager.get_level_config()
+	next_interval = randf_range(cfg["spawn_min"], cfg["spawn_max"])

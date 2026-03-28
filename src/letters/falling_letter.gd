@@ -1,7 +1,6 @@
 extends Node2D
 
 const ALPHABET := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-const FALL_SPEED := 80.0
 const LETTER_SIZE := 40.0
 
 var velocity: Vector2 = Vector2.ZERO
@@ -18,7 +17,8 @@ func setup(p_letter: String, p_position: Vector2, p_font_size: int = 40) -> void
 	letter = p_letter
 	position = p_position
 	font_size = p_font_size
-	velocity = Vector2(0, FALL_SPEED)
+	var fall_speed: float = GameManager.get_level_config()["fall_speed"]
+	velocity = Vector2(0, fall_speed)
 
 func _process(delta: float) -> void:
 	position += velocity * delta

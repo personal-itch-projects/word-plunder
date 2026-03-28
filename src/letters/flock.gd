@@ -5,8 +5,11 @@ const SCORABLE_SIZE := 4
 const GREEN_TINT := Color(0.2, 0.8, 0.3, 0.3)
 
 var letters: Array[Node2D] = []
-var velocity: Vector2 = Vector2(0, 80.0)
+var velocity: Vector2 = Vector2.ZERO
 var scorable: bool = false
+
+func _ready() -> void:
+	velocity = Vector2(0, GameManager.get_level_config()["fall_speed"])
 
 func add_letter(letter_node: Node2D) -> void:
 	letters.append(letter_node)
