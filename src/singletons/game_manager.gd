@@ -26,6 +26,7 @@ var language: String = "en"
 var datasource: String = "lemma"
 
 var previous_state: GameState.State = GameState.State.MAIN_MENU
+var is_resuming: bool = false
 
 var _translations: Dictionary = {
 	"WORD CANNON": {"en": "WORD CANNON", "ru": "ТАРАТОР"},
@@ -117,4 +118,6 @@ func pause_game() -> void:
 	change_state(GameState.State.PAUSED)
 
 func resume_game() -> void:
+	is_resuming = true
 	change_state(GameState.State.PLAYING)
+	is_resuming = false

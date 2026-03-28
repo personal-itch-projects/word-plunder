@@ -43,7 +43,10 @@ func _on_state_changed(new_state: GameState.State) -> void:
 			hud.visible = true
 			platform.visible = true
 			letter_spawner.set_process(true)
-			if GameManager.previous_state != GameState.State.PAUSED:
+			if GameManager.is_resuming:
+				menu_letter_spawner.clear_letters()
+			else:
+				_clear_gameplay()
 				letter_spawner.start_spawning()
 				menu_letter_spawner.clear_letters()
 		GameState.State.SETTINGS:
