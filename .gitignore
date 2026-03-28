@@ -405,6 +405,7 @@ override.cfg
 *.woff2
 *.otf
 *.ttf
+!/assets/fonts/**/*.ttf
 
 # Audio
 *.mp3
