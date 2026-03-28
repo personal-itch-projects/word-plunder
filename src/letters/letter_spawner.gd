@@ -29,14 +29,32 @@ func _process(delta: float) -> void:
 		_randomize_interval()
 
 func _spawn_letter() -> void:
+	var x_pos := _find_free_x_position()
+	if x_pos < 0:
+		return  # Skip this spawn cycle if no free position found
 	var FallingLetterScript := preload("res://src/letters/falling_letter.gd")
 	var letter_node := Node2D.new()
 	letter_node.set_script(FallingLetterScript)
 	var allowed: String = GameManager.get_allowed_letters()
 	var rand_letter := allowed[randi() % allowed.length()]
-	var x_pos := randf_range(40, screen_width - 40)
 	letter_node.setup(rand_letter, Vector2(x_pos, -30))
 	flock_manager.create_flock_for_letter(letter_node)
+
+func _find_free_x_position() -> float:
+	const MAX_ATTEMPTS := 10
+	for _attempt in MAX_ATTEMPTS:
+		var x := randf_range(40, screen_width - 40)
+		if _is_x_clear(x):
+			return x
+	return -1.0
+
+func _is_x_clear(x: float) -> bool:
+	const MIN_SPACING := 60.0
+	for flock in flock_manager.flocks:
+		var rect := flock.get_bounding_rect()
+		if x > rect.position.x - MIN_SPACING and x < rect.end.x + MIN_SPACING:
+			return false
+	return true
 
 func _randomize_interval() -> void:
 	var cfg: Dictionary = GameManager.get_level_config()
