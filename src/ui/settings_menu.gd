@@ -3,8 +3,10 @@ extends Control
 var font: Font
 var back_rect: Rect2
 var controls_rect: Rect2
+var language_rect: Rect2
 var hover_back: bool = false
 var hover_controls: bool = false
+var hover_language: bool = false
 var screen_size: Vector2
 
 func _ready() -> void:
@@ -13,15 +15,18 @@ func _ready() -> void:
 	var center_x: float = screen_size.x / 2.0
 	var center_y: float = screen_size.y / 2.0
 	controls_rect = Rect2(center_x - 120, center_y - 10, 240, 50)
-	back_rect = Rect2(center_x - 100, center_y + 60, 200, 50)
+	language_rect = Rect2(center_x - 120, center_y + 60, 240, 50)
+	back_rect = Rect2(center_x - 100, center_y + 130, 200, 50)
 
 func _process(_delta: float) -> void:
 	var mouse_pos := get_viewport().get_mouse_position()
 	var was_back := hover_back
 	var was_controls := hover_controls
+	var was_language := hover_language
 	hover_back = back_rect.has_point(mouse_pos) and visible
 	hover_controls = controls_rect.has_point(mouse_pos) and visible
-	if hover_back != was_back or hover_controls != was_controls:
+	hover_language = language_rect.has_point(mouse_pos) and visible
+	if hover_back != was_back or hover_controls != was_controls or hover_language != was_language:
 		queue_redraw()
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -30,6 +35,14 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		if controls_rect.has_point(event.position):
 			GameManager.use_arrow_keys = not GameManager.use_arrow_keys
+			queue_redraw()
+			get_viewport().set_input_as_handled()
+		elif language_rect.has_point(event.position):
+			if GameManager.language == "en":
+				GameManager.language = "ru"
+			else:
+				GameManager.language = "en"
+			WordDictionary.load_dictionary(GameManager.language)
 			queue_redraw()
 			get_viewport().set_input_as_handled()
 		elif back_rect.has_point(event.position):
@@ -45,6 +58,10 @@ func _draw() -> void:
 	# Controls toggle
 	var controls_label := "Controls: Arrows" if GameManager.use_arrow_keys else "Controls: A/D"
 	_draw_button(controls_rect, controls_label, hover_controls)
+
+	# Language toggle
+	var lang_label := "Language: Russian" if GameManager.language == "ru" else "Language: English"
+	_draw_button(language_rect, lang_label, hover_language)
 
 	# Back button
 	_draw_button(back_rect, "BACK", hover_back)
