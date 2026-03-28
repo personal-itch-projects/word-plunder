@@ -7,10 +7,10 @@ signal level_changed(new_level: int)
 
 const MAX_LIVES := 3
 const LEVELS := [
-	{ "letter_count": -1, "fall_speed": 10.0, "spawn_min": 1.2, "spawn_max": 2.5, "duration": 30.0 },
-	{ "letter_count": -1, "fall_speed": 15.0, "spawn_min": 0.8, "spawn_max": 2.0, "duration": 30.0 },
-	{ "letter_count": -1, "fall_speed": 20.0, "spawn_min": 0.6, "spawn_max": 1.5, "duration": 30.0 },
-	{ "letter_count": -1, "fall_speed": 25.0, "spawn_min": 0.4, "spawn_max": 1.0, "duration": 30.0 },
+	{ "letter_count": -1, "fall_speed": 10.0, "spawn_min": 1.2, "spawn_max": 2.5, "duration": 30.0, "missing_letters": 1 },
+	{ "letter_count": -1, "fall_speed": 15.0, "spawn_min": 0.8, "spawn_max": 2.0, "duration": 30.0, "missing_letters": 2 },
+	{ "letter_count": -1, "fall_speed": 20.0, "spawn_min": 0.6, "spawn_max": 1.5, "duration": 30.0, "missing_letters": 0 },
+	{ "letter_count": -1, "fall_speed": 25.0, "spawn_min": 0.4, "spawn_max": 1.0, "duration": 30.0, "missing_letters": 0 },
 ]
 
 var current_state: GameState.State = GameState.State.MAIN_MENU
@@ -80,6 +80,10 @@ func get_allowed_letters() -> String:
 func change_state(new_state: GameState.State) -> void:
 	previous_state = current_state
 	current_state = new_state
+	if new_state == GameState.State.PAUSED:
+		get_tree().paused = true
+	elif new_state != GameState.State.SETTINGS:
+		get_tree().paused = false
 	state_changed.emit(new_state)
 
 func add_score(amount: int) -> void:

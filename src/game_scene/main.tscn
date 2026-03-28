@@ -12,6 +12,7 @@
 [ext_resource type="Script" uid="uid://f2b0duw32vxp" path="res://src/ui/pause_menu.gd" id="10_m5n7v"]
 
 [node name="Main" type="Node2D" unique_id=1661236728]
+process_mode = 3
 script = ExtResource("1_main")
 
 [node name="Background" type="ColorRect" parent="." unique_id=317334135]
@@ -26,6 +27,7 @@ mouse_filter = 2
 color = Color(0.96, 0.96, 0.96, 1)
 
 [node name="GameLayer" type="Node2D" parent="." unique_id=420547480]
+process_mode = 1
 
 [node name="MenuLetterSpawner" type="Node2D" parent="GameLayer" unique_id=949490565]
 script = ExtResource("2_menu_spawner")

@@ -49,6 +49,22 @@ func create_flock_for_letter(letter_node: Node2D) -> Node2D:
 	flocks.append(flock)
 	return flock
 
+func create_flock_for_partial_word(letter_nodes: Array[Node2D], spawn_pos: Vector2) -> Node2D:
+	var flock_scene := preload("res://src/letters/flock.gd")
+	var flock := Node2D.new()
+	flock.set_script(flock_scene)
+	flock.position = spawn_pos
+	for letter_node in letter_nodes:
+		letter_node.position = Vector2.ZERO
+		letter_node.velocity = Vector2.ZERO
+		flock.add_child(letter_node)
+		flock.letters.append(letter_node)
+	flock._arrange_letters()
+	flock._update_scorable()
+	add_child(flock)
+	flocks.append(flock)
+	return flock
+
 func check_projectile_collision(proj_rect: Rect2, proj_letter: String) -> Node2D:
 	for flock in flocks:
 		if flock.get_bounding_rect().intersects(proj_rect):
@@ -63,6 +79,14 @@ func add_letter_to_flock(flock: Node2D, letter_char: String, from_pos: Vector2) 
 	new_letter.velocity = Vector2.ZERO
 	var index := _find_insertion_index(flock, from_pos)
 	flock.insert_letter_at(new_letter, index)
+	if not flock.scorable:
+		var letter_chars: Array[String] = []
+		for l in flock.letters:
+			letter_chars.append(l.letter)
+		if not WordDictionary.can_extend_to_word(letter_chars):
+			var flock_idx := flocks.find(flock)
+			if flock_idx >= 0:
+				_remove_flock(flock_idx)
 
 func _find_insertion_index(flock: Node2D, proj_global_pos: Vector2) -> int:
 	var proj_x := proj_global_pos.x

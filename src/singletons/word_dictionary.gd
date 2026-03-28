@@ -4,6 +4,7 @@ const MIN_WORD_LENGTH := 3
 
 var anagram_table: Dictionary = {}   # sorted_key -> Array[{word, frequency}]
 var word_table: Dictionary = {}      # word -> frequency (exact match)
+var _word_list: Array = []           # flat Array[{word, frequency}] for random access
 var language: String = "en"           # "en" or "ru"
 var letter_weights: Dictionary = {}   # letter -> float weight
 var _weight_total: float = 0.0
@@ -18,6 +19,7 @@ func load_dictionary(lang: String) -> void:
 	language = lang
 	anagram_table.clear()
 	word_table.clear()
+	_word_list.clear()
 	var path := "res://assets/data/%s.%s.csv" % [GameManager.datasource, lang]
 	var check_fn: Callable = _is_alpha if lang == "en" else _is_cyrillic
 	var file := FileAccess.open(path, FileAccess.READ)
@@ -43,6 +45,8 @@ func load_dictionary(lang: String) -> void:
 			anagram_table[key] = []
 		anagram_table[key].append({"word": word, "frequency": freq})
 		word_table[word] = freq
+	for w in word_table:
+		_word_list.append({"word": w, "frequency": word_table[w]})
 	_compute_letter_weights()
 	language_changed.emit(lang)
 
@@ -108,3 +112,52 @@ func _compute_letter_weights() -> void:
 	var chars: Array = letter_weights.keys()
 	chars.sort()
 	_alphabet = "".join(chars).to_upper()
+
+func pick_partial_word(gaps: int) -> Dictionary:
+	var min_len := gaps + MIN_WORD_LENGTH
+	var candidates: Array = []
+	var total_weight := 0.0
+	for entry in _word_list:
+		if entry["word"].length() >= min_len:
+			var w := log(maxf(float(entry["frequency"]), 1.0)) + 1.0
+			candidates.append({"entry": entry, "weight": w})
+			total_weight += w
+	if candidates.is_empty():
+		return {}
+	var roll := randf() * total_weight
+	var acc := 0.0
+	var chosen: Dictionary = candidates[0]["entry"]
+	for c in candidates:
+		acc += c["weight"]
+		if roll <= acc:
+			chosen = c["entry"]
+			break
+	var word: String = chosen["word"]
+	var all_indices: Array = []
+	for i in word.length():
+		all_indices.append(i)
+	all_indices.shuffle()
+	var remove_indices: Array = all_indices.slice(0, gaps)
+	var kept_letters: Array[String] = []
+	var kept_positions: Array[int] = []
+	for i in word.length():
+		if not remove_indices.has(i):
+			kept_letters.append(word[i].to_upper())
+			kept_positions.append(i)
+	return {"letters": kept_letters, "positions": kept_positions, "word_length": word.length()}
+
+func can_extend_to_word(letters: Array[String]) -> bool:
+	var seq := ""
+	for l in letters:
+		seq += l.to_lower()
+	for word in word_table:
+		if word.length() >= seq.length() and _is_subsequence(seq, word):
+			return true
+	return false
+
+func _is_subsequence(seq: String, word: String) -> bool:
+	var j := 0
+	for i in word.length():
+		if j < seq.length() and word[i] == seq[j]:
+			j += 1
+	return j == seq.length()
