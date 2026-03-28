@@ -107,6 +107,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if GameManager.current_state != GameState.State.PLAYING:
 		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if flock_manager.is_click_on_scorable(event.position):
+			return
 		_shoot()
 
 func _shoot() -> void:

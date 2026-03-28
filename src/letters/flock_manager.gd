@@ -29,6 +29,12 @@ func _try_click_flock(click_pos: Vector2) -> void:
 			get_viewport().set_input_as_handled()
 			return
 
+func is_click_on_scorable(click_pos: Vector2) -> bool:
+	for flock in flocks:
+		if flock.scorable and flock.get_bounding_rect().has_point(click_pos):
+			return true
+	return false
+
 func create_flock_for_letter(letter_node: Node2D) -> Node2D:
 	var flock_scene := preload("res://src/letters/flock.gd")
 	var flock := Node2D.new()
