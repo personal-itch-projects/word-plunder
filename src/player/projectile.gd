@@ -15,6 +15,8 @@ func setup(p_letter: String, p_position: Vector2, p_flock_manager: Node2D, p_vel
 	flock_manager = p_flock_manager
 	velocity = p_velocity
 	font = preload("res://assets/fonts/DM_Sans/DMSans-Regular.ttf")
+
+func _ready() -> void:
 	screen_width = get_viewport().get_visible_rect().size.x
 
 func _process(delta: float) -> void:
