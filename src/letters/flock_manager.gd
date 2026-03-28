@@ -1,5 +1,9 @@
 extends Node2D
 
+const SCORE_BASE := 2
+const SCORE_MULTIPLIER := 3
+const MAX_FREQ := 1500000.0
+
 var flocks: Array[Node2D] = []
 var screen_height: float
 
@@ -19,7 +23,8 @@ func _try_click_flock(click_pos: Vector2) -> void:
 	for i in range(flocks.size() - 1, -1, -1):
 		var flock: Node2D = flocks[i]
 		if flock.scorable and flock.get_bounding_rect().has_point(click_pos):
-			GameManager.add_score(4)
+			var score := _calculate_score(flock.matched_word.length(), flock.matched_frequency)
+			GameManager.add_score(score)
 			_remove_flock(i)
 			return
 
@@ -71,3 +76,9 @@ func clear_all() -> void:
 		flock.remove_all()
 		flock.queue_free()
 	flocks.clear()
+
+func _calculate_score(word_length: int, frequency: int) -> int:
+	var freq := maxf(float(frequency), 1.0)
+	var rarity_factor: float = log(MAX_FREQ / freq) / log(10.0)
+	var raw_score: float = float(word_length) * (SCORE_BASE + SCORE_MULTIPLIER * rarity_factor)
+	return maxi(roundi(raw_score), 1)

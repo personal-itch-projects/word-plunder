@@ -1,15 +1,19 @@
 extends Node2D
 
 const GRID_CELL := 44.0
-const SCORABLE_SIZE := 4
 const GREEN_TINT := Color(0.2, 0.8, 0.3, 0.3)
 
 var letters: Array[Node2D] = []
 var velocity: Vector2 = Vector2.ZERO
 var scorable: bool = false
+var matched_word: String = ""
+var matched_frequency: int = 0
+
+var font: Font
 
 func _ready() -> void:
 	velocity = Vector2(0, GameManager.get_level_config()["fall_speed"])
+	font = preload("res://assets/fonts/DM_Sans/DMSans-Regular.ttf")
 
 func add_letter(letter_node: Node2D) -> void:
 	letters.append(letter_node)
@@ -26,7 +30,18 @@ func _arrange_letters() -> void:
 		letters[i].velocity = Vector2.ZERO
 
 func _update_scorable() -> void:
-	scorable = letters.size() >= SCORABLE_SIZE
+	var letter_chars: Array[String] = []
+	for l in letters:
+		letter_chars.append(l.letter)
+	var result = WordDictionary.find_word(letter_chars)
+	if result != null:
+		scorable = true
+		matched_word = result["word"]
+		matched_frequency = result["frequency"]
+	else:
+		scorable = false
+		matched_word = ""
+		matched_frequency = 0
 	queue_redraw()
 
 func _process(delta: float) -> void:
@@ -36,6 +51,11 @@ func _draw() -> void:
 	if scorable:
 		var rect := get_bounding_rect_local()
 		draw_rect(rect.grow(4), GREEN_TINT)
+		var word_upper := matched_word.to_upper()
+		var text_size := font.get_string_size(word_upper, HORIZONTAL_ALIGNMENT_CENTER, -1, 18)
+		var text_x := rect.position.x + rect.size.x / 2.0 - text_size.x / 2.0
+		var text_y := rect.position.y - 8
+		draw_string(font, Vector2(text_x, text_y), word_upper, HORIZONTAL_ALIGNMENT_CENTER, -1, 18, Color(0.1, 0.6, 0.2))
 
 func get_bounding_rect() -> Rect2:
 	if letters.is_empty():
