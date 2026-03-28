@@ -18,7 +18,7 @@ func add_letter(letter_node: Node2D) -> void:
 	_update_scorable()
 
 func _arrange_letters() -> void:
-	var cols := ceili(sqrt(float(letters.size())))
+	var cols := letters.size()
 	for i in letters.size():
 		var col := i % cols
 		var row := i / cols
