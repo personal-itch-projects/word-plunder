@@ -1,6 +1,5 @@
 extends Node2D
 
-const ALPHABET := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 const LETTER_SIZE := 40.0
 
 var velocity: Vector2 = Vector2.ZERO
@@ -11,7 +10,8 @@ var font_size: int = 40
 func _ready() -> void:
 	font = preload("res://assets/fonts/DM_Sans/DMSans-Regular.ttf")
 	if letter == "":
-		letter = ALPHABET[randi() % ALPHABET.length()]
+		var alphabet := WordDictionary.get_alphabet()
+		letter = alphabet[randi() % alphabet.length()]
 
 func setup(p_letter: String, p_position: Vector2, p_font_size: int = 40) -> void:
 	letter = p_letter

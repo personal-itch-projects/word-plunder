@@ -1,6 +1,5 @@
 extends Node2D
 
-const ALPHABET := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 const SPEED := 30.0
 const SPAWN_INTERVAL := 0.3
 const MIN_SIZE := 24
@@ -42,7 +41,8 @@ func _try_spawn() -> void:
 			return
 
 	var letter_node := Node2D.new()
-	var rand_letter := ALPHABET[randi() % ALPHABET.length()]
+	var alphabet := WordDictionary.get_alphabet()
+	var rand_letter := alphabet[randi() % alphabet.length()]
 	var rand_angle := randf_range(-30, 30)
 	letter_node.position = Vector2(x_pos, y_pos)
 	letter_node.rotation_degrees = rand_angle

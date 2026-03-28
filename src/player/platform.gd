@@ -5,7 +5,6 @@ const PLATFORM_WIDTH := 100.0
 const PLATFORM_HEIGHT := 16.0
 const CANNON_WIDTH := 8.0
 const CANNON_HEIGHT := 30.0
-const ALPHABET := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 var screen_width: float
 var next_letter: String = ""
@@ -75,7 +74,8 @@ func _shoot() -> void:
 	_pick_next_letter()
 
 func _pick_next_letter() -> void:
-	next_letter = ALPHABET[randi() % ALPHABET.length()]
+	var allowed := GameManager.get_allowed_letters()
+	next_letter = allowed[randi() % allowed.length()]
 	queue_redraw()
 
 func _draw() -> void:

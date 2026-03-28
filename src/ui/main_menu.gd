@@ -1,6 +1,5 @@
 extends Control
 
-const ALPHABET := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 const PLATFORM_WIDTH := 100.0
 const PLATFORM_HEIGHT := 16.0
 const CANNON_WIDTH := 8.0
@@ -35,7 +34,8 @@ func _ready() -> void:
 	_pick_next_letter()
 
 func _pick_next_letter() -> void:
-	next_letter = ALPHABET[randi() % ALPHABET.length()]
+	var alphabet := WordDictionary.get_alphabet()
+	next_letter = alphabet[randi() % alphabet.length()]
 
 func _process(delta: float) -> void:
 	if not visible:

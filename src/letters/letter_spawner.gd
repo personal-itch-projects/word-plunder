@@ -32,8 +32,7 @@ func _spawn_letter() -> void:
 	var FallingLetterScript := preload("res://src/letters/falling_letter.gd")
 	var letter_node := Node2D.new()
 	letter_node.set_script(FallingLetterScript)
-	var cfg: Dictionary = GameManager.get_level_config()
-	var allowed: String = cfg["allowed_letters"]
+	var allowed: String = GameManager.get_allowed_letters()
 	var rand_letter := allowed[randi() % allowed.length()]
 	var x_pos := randf_range(40, screen_width - 40)
 	letter_node.setup(rand_letter, Vector2(x_pos, -30))
