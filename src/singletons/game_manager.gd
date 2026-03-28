@@ -20,6 +20,7 @@ var current_level: int = 0
 var level_timer: float = 0.0
 var use_arrow_keys: bool = false
 var language: String = "en"
+var datasource: String = "lemma"
 
 var _translations: Dictionary = {
 	"LETTER FALL": {"en": "LETTER FALL", "ru": "БУКВОПАД"},
@@ -30,6 +31,8 @@ var _translations: Dictionary = {
 	"Controls: Arrows": {"en": "Controls: Arrows", "ru": "Управление: Стрелки"},
 	"Language: English": {"en": "Language: English", "ru": "Язык: English"},
 	"Language: Russian": {"en": "Language: Russian", "ru": "Язык: Русский"},
+	"Dict: Lemma": {"en": "Dict: Lemma", "ru": "Словарь: Lemma"},
+	"Dict: Wiktionary": {"en": "Dict: Wiktionary", "ru": "Словарь: Wiktionary"},
 	"SCORE": {"en": "SCORE", "ru": "СЧЁТ"},
 	"LEVEL": {"en": "LEVEL", "ru": "УРОВЕНЬ"},
 	"GAME OVER": {"en": "GAME OVER", "ru": "КОНЕЦ ИГРЫ"},

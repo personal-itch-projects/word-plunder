@@ -13,7 +13,7 @@ func _ready() -> void:
 func load_dictionary(lang: String) -> void:
 	language = lang
 	anagram_table.clear()
-	var path := "res://assets/data/lemma.%s.csv" % lang
+	var path := "res://assets/data/%s.%s.csv" % [GameManager.datasource, lang]
 	var check_fn: Callable = _is_alpha if lang == "en" else _is_cyrillic
 	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
@@ -77,4 +77,4 @@ func get_alphabet() -> String:
 	if language == "en":
 		return "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	else:
-		return "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
+		return "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
