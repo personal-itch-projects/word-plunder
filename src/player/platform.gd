@@ -102,7 +102,7 @@ func _process(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if GameManager.current_state != GameState.State.PLAYING:
 		return
-	if event.is_action_pressed("ui_accept"):
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		_shoot()
 
 func _shoot() -> void:

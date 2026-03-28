@@ -26,6 +26,7 @@ func _try_click_flock(click_pos: Vector2) -> void:
 			var score := _calculate_score(flock.matched_word.length(), flock.matched_frequency)
 			GameManager.add_score(score)
 			_remove_flock(i)
+			get_viewport().set_input_as_handled()
 			return
 
 func create_flock_for_letter(letter_node: Node2D) -> Node2D:
