@@ -1,19 +1,20 @@
-[gd_scene load_steps=10 format=3 uid="uid://llgnwlllqwtl"]
+[gd_scene format=3 uid="uid://llgnwlllqwtl"]
 
-[ext_resource type="Script" path="res://src/game_scene/main.gd" id="1_main"]
-[ext_resource type="Script" path="res://src/letters/menu_letter_spawner.gd" id="2_menu_spawner"]
-[ext_resource type="Script" path="res://src/letters/letter_spawner.gd" id="3_letter_spawner"]
-[ext_resource type="Script" path="res://src/letters/flock_manager.gd" id="4_flock_manager"]
-[ext_resource type="Script" path="res://src/player/platform.gd" id="5_platform"]
-[ext_resource type="Script" path="res://src/ui/hud.gd" id="6_hud"]
-[ext_resource type="Script" path="res://src/ui/main_menu.gd" id="7_main_menu"]
-[ext_resource type="Script" path="res://src/ui/settings_menu.gd" id="8_settings_menu"]
-[ext_resource type="Script" path="res://src/ui/defeat_screen.gd" id="9_defeat_screen"]
+[ext_resource type="Script" uid="uid://cwrj4mvt5vnyx" path="res://src/game_scene/main.gd" id="1_main"]
+[ext_resource type="Script" uid="uid://cbay1fadw5gc6" path="res://src/letters/menu_letter_spawner.gd" id="2_menu_spawner"]
+[ext_resource type="Script" uid="uid://3tp3i5wsow62" path="res://src/letters/letter_spawner.gd" id="3_letter_spawner"]
+[ext_resource type="Script" uid="uid://mmrqu3p7625n" path="res://src/letters/flock_manager.gd" id="4_flock_manager"]
+[ext_resource type="Script" uid="uid://dug3klnq5q3d2" path="res://src/player/platform.gd" id="5_platform"]
+[ext_resource type="Script" uid="uid://c43gat8ovyiks" path="res://src/ui/hud.gd" id="6_hud"]
+[ext_resource type="Script" uid="uid://drg44j52ca0wk" path="res://src/ui/main_menu.gd" id="7_main_menu"]
+[ext_resource type="Script" uid="uid://c7n23hb8p61s4" path="res://src/ui/settings_menu.gd" id="8_settings_menu"]
+[ext_resource type="Script" uid="uid://vyohkxcl3t51" path="res://src/ui/defeat_screen.gd" id="9_defeat_screen"]
+[ext_resource type="Script" uid="uid://f2b0duw32vxp" path="res://src/ui/pause_menu.gd" id="10_m5n7v"]
 
-[node name="Main" type="Node2D"]
+[node name="Main" type="Node2D" unique_id=1661236728]
 script = ExtResource("1_main")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="." unique_id=317334135]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -24,23 +25,23 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.96, 0.96, 0.96, 1)
 
-[node name="GameLayer" type="Node2D" parent="."]
+[node name="GameLayer" type="Node2D" parent="." unique_id=420547480]
 
-[node name="MenuLetterSpawner" type="Node2D" parent="GameLayer"]
+[node name="MenuLetterSpawner" type="Node2D" parent="GameLayer" unique_id=949490565]
 script = ExtResource("2_menu_spawner")
 
-[node name="LetterSpawner" type="Node2D" parent="GameLayer"]
+[node name="LetterSpawner" type="Node2D" parent="GameLayer" unique_id=706861530]
 script = ExtResource("3_letter_spawner")
 
-[node name="FlockManager" type="Node2D" parent="GameLayer"]
+[node name="FlockManager" type="Node2D" parent="GameLayer" unique_id=779837495]
 script = ExtResource("4_flock_manager")
 
-[node name="Platform" type="Node2D" parent="GameLayer"]
+[node name="Platform" type="Node2D" parent="GameLayer" unique_id=14237968]
 script = ExtResource("5_platform")
 
-[node name="UILayer" type="CanvasLayer" parent="."]
+[node name="UILayer" type="CanvasLayer" parent="." unique_id=770333525]
 
-[node name="HUD" type="Control" parent="UILayer"]
+[node name="HUD" type="Control" parent="UILayer" unique_id=602557065]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -50,7 +51,7 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("6_hud")
 
-[node name="MainMenu" type="Control" parent="UILayer"]
+[node name="MainMenu" type="Control" parent="UILayer" unique_id=369419003]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -60,7 +61,7 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("7_main_menu")
 
-[node name="SettingsMenu" type="Control" parent="UILayer"]
+[node name="SettingsMenu" type="Control" parent="UILayer" unique_id=1056188061]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -70,7 +71,7 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("8_settings_menu")
 
-[node name="DefeatScreen" type="Control" parent="UILayer"]
+[node name="DefeatScreen" type="Control" parent="UILayer" unique_id=1188155384]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -79,3 +80,13 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("9_defeat_screen")
+
+[node name="PauseMenu" type="Control" parent="UILayer" unique_id=1941017146]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("10_m5n7v")

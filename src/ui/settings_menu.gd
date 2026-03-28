@@ -5,12 +5,10 @@ var back_rect: Rect2
 var move_left_rect: Rect2
 var move_right_rect: Rect2
 var language_rect: Rect2
-var datasource_rect: Rect2
 var hover_back: bool = false
 var hover_move_left: bool = false
 var hover_move_right: bool = false
 var hover_language: bool = false
-var hover_datasource: bool = false
 var screen_size: Vector2
 var waiting_for_key: String = ""
 
@@ -22,8 +20,7 @@ func _ready() -> void:
 	move_left_rect = Rect2(center_x - 120, center_y - 80, 240, 50)
 	move_right_rect = Rect2(center_x - 120, center_y - 10, 240, 50)
 	language_rect = Rect2(center_x - 120, center_y + 60, 240, 50)
-	datasource_rect = Rect2(center_x - 120, center_y + 130, 240, 50)
-	back_rect = Rect2(center_x - 100, center_y + 200, 200, 50)
+	back_rect = Rect2(center_x - 100, center_y + 130, 200, 50)
 
 func _process(_delta: float) -> void:
 	var mouse_pos := get_viewport().get_mouse_position()
@@ -31,13 +28,11 @@ func _process(_delta: float) -> void:
 	var was_move_left := hover_move_left
 	var was_move_right := hover_move_right
 	var was_language := hover_language
-	var was_datasource := hover_datasource
 	hover_back = back_rect.has_point(mouse_pos) and visible
 	hover_move_left = move_left_rect.has_point(mouse_pos) and visible
 	hover_move_right = move_right_rect.has_point(mouse_pos) and visible
 	hover_language = language_rect.has_point(mouse_pos) and visible
-	hover_datasource = datasource_rect.has_point(mouse_pos) and visible
-	if hover_back != was_back or hover_move_left != was_move_left or hover_move_right != was_move_right or hover_language != was_language or hover_datasource != was_datasource:
+	if hover_back != was_back or hover_move_left != was_move_left or hover_move_right != was_move_right or hover_language != was_language:
 		queue_redraw()
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -70,18 +65,12 @@ func _unhandled_input(event: InputEvent) -> void:
 			WordDictionary.load_dictionary(GameManager.language)
 			queue_redraw()
 			get_viewport().set_input_as_handled()
-		elif datasource_rect.has_point(event.position):
-			waiting_for_key = ""
-			if GameManager.datasource == "lemma":
-				GameManager.datasource = "kaikki"
-			else:
-				GameManager.datasource = "lemma"
-			WordDictionary.load_dictionary(GameManager.language)
-			queue_redraw()
-			get_viewport().set_input_as_handled()
 		elif back_rect.has_point(event.position):
 			waiting_for_key = ""
-			GameManager.go_to_menu()
+			if GameManager.previous_state == GameState.State.PAUSED:
+				GameManager.pause_game()
+			else:
+				GameManager.go_to_menu()
 			get_viewport().set_input_as_handled()
 
 func _draw() -> void:
@@ -109,10 +98,6 @@ func _draw() -> void:
 	# Language toggle
 	var lang_key := "Language: Russian" if GameManager.language == "ru" else "Language: English"
 	_draw_button(language_rect, GameManager.tr_text(lang_key), hover_language)
-
-	# Datasource toggle
-	var ds_key := "Dict: Wiktionary" if GameManager.datasource == "kaikki" else "Dict: Lemma"
-	_draw_button(datasource_rect, GameManager.tr_text(ds_key), hover_datasource)
 
 	# Back button
 	_draw_button(back_rect, GameManager.tr_text("BACK"), hover_back)

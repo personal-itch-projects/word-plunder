@@ -9,16 +9,24 @@ extends Node2D
 @onready var main_menu: Control = $UILayer/MainMenu
 @onready var settings_menu: Control = $UILayer/SettingsMenu
 @onready var defeat_screen: Control = $UILayer/DefeatScreen
+@onready var pause_menu: Control = $UILayer/PauseMenu
 
 func _ready() -> void:
 	GameManager.state_changed.connect(_on_state_changed)
 	_on_state_changed(GameManager.current_state)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+		if GameManager.current_state == GameState.State.PLAYING:
+			GameManager.pause_game()
+			get_viewport().set_input_as_handled()
 
 func _on_state_changed(new_state: GameState.State) -> void:
 	# Hide everything first
 	main_menu.visible = false
 	settings_menu.visible = false
 	defeat_screen.visible = false
+	pause_menu.visible = false
 	hud.visible = false
 	platform.visible = false
 	letter_spawner.set_process(false)
@@ -35,12 +43,17 @@ func _on_state_changed(new_state: GameState.State) -> void:
 			hud.visible = true
 			platform.visible = true
 			letter_spawner.set_process(true)
-			letter_spawner.start_spawning()
-			menu_letter_spawner.clear_letters()
+			if GameManager.previous_state != GameState.State.PAUSED:
+				letter_spawner.start_spawning()
+				menu_letter_spawner.clear_letters()
 		GameState.State.SETTINGS:
 			settings_menu.visible = true
 		GameState.State.DEFEAT:
 			defeat_screen.visible = true
+			hud.visible = true
+			_clear_gameplay()
+		GameState.State.PAUSED:
+			pause_menu.visible = true
 			hud.visible = true
 
 func _clear_gameplay() -> void:

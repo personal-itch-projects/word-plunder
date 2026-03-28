@@ -25,6 +25,8 @@ var bindings: Dictionary = {
 var language: String = "en"
 var datasource: String = "lemma"
 
+var previous_state: GameState.State = GameState.State.MAIN_MENU
+
 var _translations: Dictionary = {
 	"LETTER FALL": {"en": "LETTER FALL", "ru": "БУКВОПАД"},
 	"PLAY": {"en": "PLAY", "ru": "ИГРАТЬ"},
@@ -43,6 +45,8 @@ var _translations: Dictionary = {
 	"Score:": {"en": "Score:", "ru": "Счёт:"},
 	"RESTART": {"en": "RESTART", "ru": "ЗАНОВО"},
 	"MENU": {"en": "MENU", "ru": "МЕНЮ"},
+	"PAUSED": {"en": "PAUSED", "ru": "ПАУЗА"},
+	"CONTINUE": {"en": "CONTINUE", "ru": "ПРОДОЛЖИТЬ"},
 }
 
 func tr_text(key: String) -> String:
@@ -73,6 +77,7 @@ func get_allowed_letters() -> String:
 	return alphabet.substr(0, count)
 
 func change_state(new_state: GameState.State) -> void:
+	previous_state = current_state
 	current_state = new_state
 	state_changed.emit(new_state)
 
@@ -107,3 +112,9 @@ func go_to_menu() -> void:
 
 func open_settings() -> void:
 	change_state(GameState.State.SETTINGS)
+
+func pause_game() -> void:
+	change_state(GameState.State.PAUSED)
+
+func resume_game() -> void:
+	change_state(GameState.State.PLAYING)

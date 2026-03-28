@@ -5,4 +5,5 @@ enum State {
 	PLAYING,
 	SETTINGS,
 	DEFEAT,
+	PAUSED,
 }
