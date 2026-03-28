@@ -32,10 +32,6 @@ jobs:
             output_dir: build/linux
             output_file: WordCannon.x86_64
             artifact: linux
-          - preset: "macOS"
-            output_dir: build/macos
-            output_file: WordCannon.zip
-            artifact: mac
           - preset: "Web"
             output_dir: build/web
             output_file: index.html
@@ -55,16 +51,7 @@ jobs:
         run: godot --headless --import 2>&1 || true
 
       - name: Export build
-        run: godot --headless --verbose --export-release "${{ matrix.preset }}" ${{ matrix.output_dir }}/${{ matrix.output_file }} 2>&1 || true
-
-      - name: Check export output
-        run: |
-          echo "=== Checking output ==="
-          ls -la ${{ matrix.output_dir }}/ || true
-          if [ ! -f "${{ matrix.output_dir }}/${{ matrix.output_file }}" ]; then
-            echo "ERROR: Export file not found!"
-            exit 1
-          fi
+        run: godot --headless --export-release "${{ matrix.preset }}" ${{ matrix.output_dir }}/${{ matrix.output_file }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -107,11 +94,6 @@ jobs:
 
       - name: Push Linux build
         run: butler push build/linux ${{ env.ITCH_GAME }}:linux --userversion ${{ steps.version.outputs.version }}
-        env:
-          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
-
-      - name: Push macOS build
-        run: butler push build/mac ${{ env.ITCH_GAME }}:mac --userversion ${{ steps.version.outputs.version }}
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
 
