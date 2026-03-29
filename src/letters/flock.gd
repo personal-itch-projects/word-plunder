@@ -3,19 +3,20 @@ extends Node2D
 const PUSH_DRAG := 2.5
 
 # Boid parameters
-const SEPARATION_RADIUS := 30.0
+const SEPARATION_RADIUS := 26.0
 const SEPARATION_STRENGTH := 120.0
 const COHESION_STRENGTH := 40.0
 const BOUNDARY_STRENGTH := 200.0
 const DRIFT_STRENGTH := 15.0
 const MAX_SPEED := 60.0
 const DAMPING := 0.97
+const COLLISION_DIAMETER := 24.0  # 2 * falling_letter.COLLISION_RADIUS
 
 # Bubble sizing
-const BASE_BUBBLE_RADIUS := 30.0
-const RADIUS_PER_LETTER := 10.0
-const METABALL_RADIUS := 24.0
-const BUBBLE_PADDING := 30.0
+const BASE_BUBBLE_RADIUS := 20.0
+const RADIUS_PER_LETTER := 8.0
+const METABALL_RADIUS := 16.0
+const BUBBLE_PADDING := 20.0
 
 # Dent effect
 const DENT_DECAY := 3.0
@@ -105,7 +106,7 @@ func _update_scorable_visual() -> void:
 	queue_redraw()
 
 func apply_push(proj_velocity: Vector2) -> void:
-	push_velocity += proj_velocity * 0.15
+	push_velocity += proj_velocity * 0.25
 
 func apply_dent(local_pos: Vector2) -> void:
 	_dent_pos = local_pos
@@ -180,7 +181,7 @@ func pop_word(word: String) -> void:
 				break
 
 	# Compute word-layout target positions centered at origin
-	var char_width := 28.0
+	var char_width := 18.0
 	var total_width := upper_word.length() * char_width
 	var start_x := -total_width / 2.0 + char_width / 2.0
 	var target_positions: Array[Vector2] = []
@@ -210,9 +211,9 @@ func pop_word(word: String) -> void:
 			_letter_float_data[li]["velocity"] = dir * randf_range(150.0, 300.0)
 			tween.tween_property(letters[li], "modulate:a", 0.0, 0.3)
 
-	# After letters arrive: hold word visible for ~1s, then fade over 1s
-	tween.chain().tween_interval(1.0)
-	tween.chain().tween_property(self, "modulate:a", 0.0, 1.0).set_ease(Tween.EASE_IN)
+	# Fade whole flock starting immediately in parallel, completes at 1.3s
+	tween.tween_property(self, "modulate:a", 0.0, 1.3).set_ease(Tween.EASE_IN).set_delay(0.3)
+
 	tween.chain().tween_callback(func():
 		remove_all()
 		queue_free()
@@ -280,8 +281,28 @@ func _process(delta: float) -> void:
 		data["velocity"] = vel
 		letters[i].position = pos + vel * delta
 
+	# Hard collision resolution: push overlapping letters apart
+	_resolve_collisions()
+
 	# Update metaball shader uniforms
 	_update_bubble_uniforms()
+
+func _resolve_collisions() -> void:
+	var count := letters.size()
+	for _pass in 3:
+		for i in count:
+			for j in range(i + 1, count):
+				var diff: Vector2 = letters[i].position - letters[j].position
+				var dist := diff.length()
+				if dist < COLLISION_DIAMETER and dist > 0.01:
+					var overlap := COLLISION_DIAMETER - dist
+					var push := diff.normalized() * overlap * 0.5
+					letters[i].position += push
+					letters[j].position -= push
+				elif dist <= 0.01:
+					var nudge := Vector2(randf() - 0.5, randf() - 0.5).normalized() * COLLISION_DIAMETER * 0.5
+					letters[i].position += nudge
+					letters[j].position -= nudge
 
 func _draw() -> void:
 	# Draw word label above the bubble
