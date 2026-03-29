@@ -10,7 +10,7 @@
 [ext_resource type="Script" uid="uid://c7n23hb8p61s4" path="res://src/ui/settings_menu.gd" id="8_settings_menu"]
 [ext_resource type="Script" uid="uid://vyohkxcl3t51" path="res://src/ui/defeat_screen.gd" id="9_defeat_screen"]
 [ext_resource type="Script" uid="uid://f2b0duw32vxp" path="res://src/ui/pause_menu.gd" id="10_m5n7v"]
-[ext_resource type="Script" path="res://src/ui/stage_complete_screen.gd" id="11_stage_complete"]
+[ext_resource type="Script" uid="uid://c2oscb337elui" path="res://src/ui/stage_complete_screen.gd" id="11_stage_complete"]
 
 [node name="Main" type="Node2D" unique_id=1661236728]
 process_mode = 3
@@ -20,8 +20,6 @@ script = ExtResource("1_main")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_right = 1152.0
-offset_bottom = 648.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
@@ -51,6 +49,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 mouse_filter = 2
 script = ExtResource("6_hud")
 
@@ -94,7 +94,7 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("10_m5n7v")
 
-[node name="StageCompleteScreen" type="Control" parent="UILayer"]
+[node name="StageCompleteScreen" type="Control" parent="UILayer" unique_id=1423248101]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

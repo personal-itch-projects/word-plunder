@@ -1,6 +1,7 @@
 extends Node2D
 
 @onready var game_layer: Node2D = $GameLayer
+@onready var background: ColorRect = $Background
 @onready var menu_letter_spawner: Node2D = $GameLayer/MenuLetterSpawner
 @onready var letter_spawner: Node2D = $GameLayer/LetterSpawner
 @onready var flock_manager: Node2D = $GameLayer/FlockManager
@@ -13,8 +14,13 @@ extends Node2D
 @onready var stage_complete_screen: Control = $UILayer/StageCompleteScreen
 
 func _ready() -> void:
+	_resize_background()
+	get_viewport().size_changed.connect(_resize_background)
 	GameManager.state_changed.connect(_on_state_changed)
 	_on_state_changed(GameManager.current_state)
+
+func _resize_background() -> void:
+	background.size = get_viewport().get_visible_rect().size
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
