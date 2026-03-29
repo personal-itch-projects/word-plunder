@@ -55,6 +55,23 @@ func _setup_bubble_visual() -> void:
 	_bubble_material = ShaderMaterial.new()
 	_bubble_material.shader = shader
 	_bubble_material.set_shader_parameter("ball_radius", METABALL_RADIUS)
+
+	# Gradient texture: edge glow -> fill -> deep interior
+	var gradient := Gradient.new()
+	gradient.offsets = PackedFloat32Array([0.0, 0.15, 0.5, 1.0])
+	gradient.colors = PackedColorArray([
+		Color(0.85, 0.93, 1.0, 0.55),
+		Color(0.78, 0.90, 1.0, 0.45),
+		Color(0.70, 0.85, 1.0, 0.30),
+		Color(0.65, 0.82, 1.0, 0.25),
+	])
+	var grad_tex := GradientTexture1D.new()
+	grad_tex.gradient = gradient
+	_bubble_material.set_shader_parameter("gradient_tex", grad_tex)
+	_bubble_material.set_shader_parameter("caustic_strength", 0.5)
+	_bubble_material.set_shader_parameter("caustic_scale", 0.05)
+	_bubble_material.set_shader_parameter("caustic_speed", 0.4)
+
 	_bubble_sprite.material = _bubble_material
 
 	add_child(_bubble_sprite)

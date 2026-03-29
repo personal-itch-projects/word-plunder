@@ -2,20 +2,53 @@ shader_type canvas_item;
 
 // Analytical metaball shader: computes the metaball field per-pixel
 // from letter positions passed as uniforms.
+// Uses gradient texture lookup (2DMetaballs style) + animated Voronoi caustics.
 
 uniform int ball_count = 0;
 uniform vec2 ball_positions[16];
 uniform float ball_radius = 24.0;
 uniform vec2 rect_size = vec2(200.0, 200.0);
 uniform float threshold = 1.0;
-uniform float edge_width = 0.4;
-uniform vec4 fill_color : source_color = vec4(0.7, 0.85, 1.0, 0.3);
-uniform vec4 edge_color : source_color = vec4(0.85, 0.93, 1.0, 0.55);
+
+// Gradient texture: maps normalized field value to color (edge -> interior)
+uniform sampler2D gradient_tex : filter_linear;
+
+// Caustic parameters
+uniform float caustic_strength = 0.5;
+uniform float caustic_scale = 0.05;
+uniform float caustic_speed = 0.4;
 
 // Dent effect: temporary indentation at impact point
 uniform vec2 dent_pos = vec2(0.0);
 uniform float dent_strength = 0.0;
 uniform float dent_radius = 30.0;
+
+// Voronoi helper: returns vec2(d1, d2) — distances to nearest and second-nearest cell
+vec2 voronoi(vec2 uv) {
+	vec2 cell = floor(uv);
+	vec2 frac_part = fract(uv);
+	float d1 = 1e10;
+	float d2 = 1e10;
+	for (int y = -1; y <= 1; y++) {
+		for (int x = -1; x <= 1; x++) {
+			vec2 neighbor = vec2(float(x), float(y));
+			// Pseudo-random point in each cell
+			vec2 point = fract(sin(vec2(
+				dot(cell + neighbor, vec2(127.1, 311.7)),
+				dot(cell + neighbor, vec2(269.5, 183.3))
+			)) * 43758.5453);
+			vec2 diff = neighbor + point - frac_part;
+			float dist = length(diff);
+			if (dist < d1) {
+				d2 = d1;
+				d1 = dist;
+			} else if (dist < d2) {
+				d2 = dist;
+			}
+		}
+	}
+	return vec2(d1, d2);
+}
 
 void fragment() {
 	// Convert UV (0-1) to local coordinates centered on the sprite
@@ -41,9 +74,22 @@ void fragment() {
 		discard;
 	}
 
-	// Edge glow near the threshold boundary
-	float edge_factor = 1.0 - smoothstep(threshold, threshold + edge_width, field);
+	// Gradient lookup: normalize field from threshold..threshold*3 -> 0..1
+	float norm = clamp((field - threshold) / (threshold * 2.0), 0.0, 1.0);
+	COLOR = texture(gradient_tex, vec2(norm, 0.5));
 
-	COLOR = mix(fill_color, edge_color, edge_factor * 0.6);
-	COLOR.a = mix(fill_color.a, max(edge_color.a, fill_color.a), edge_factor);
+	// Voronoi caustics: two layers at different scales, animated
+	float t = TIME * caustic_speed;
+	vec2 caustic_uv = pos * caustic_scale;
+
+	vec2 v1 = voronoi(caustic_uv + vec2(t * 0.7, t * 0.5));
+	vec2 v2 = voronoi(caustic_uv * 1.6 + vec2(-t * 0.4, t * 0.8));
+
+	// Edge-detect via d2 - d1 product of both layers
+	float c = (v1.y - v1.x) * (v2.y - v2.x);
+	c = pow(c, 0.8);
+
+	// Mask caustics to interior: fade out near bubble edge
+	float interior_mask = smoothstep(0.0, 0.3, norm);
+	COLOR.rgb += vec3(c * caustic_strength * interior_mask);
 }

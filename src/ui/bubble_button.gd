@@ -11,8 +11,8 @@ const COLLISION_DIAMETER := 14.0
 
 const BASE_BUBBLE_RADIUS := 14.0
 const RADIUS_PER_LETTER := 7.0
-const METABALL_RADIUS := 14.0
-const BUBBLE_PADDING := 8.0
+const METABALL_RADIUS := 22.0
+const BUBBLE_PADDING := 18.0
 
 const HOVER_SCALE := 1.08
 const HOVER_SPEED := 8.0
@@ -59,6 +59,23 @@ func _setup_bubble_visual() -> void:
 	_bubble_material = ShaderMaterial.new()
 	_bubble_material.shader = shader
 	_bubble_material.set_shader_parameter("ball_radius", METABALL_RADIUS)
+
+	# Gradient texture: bright rim -> fill -> deep interior (richer for enveloping look)
+	var gradient := Gradient.new()
+	gradient.offsets = PackedFloat32Array([0.0, 0.15, 0.5, 1.0])
+	gradient.colors = PackedColorArray([
+		Color(0.88, 0.95, 1.0, 0.70),
+		Color(0.80, 0.92, 1.0, 0.55),
+		Color(0.72, 0.87, 1.0, 0.42),
+		Color(0.68, 0.84, 1.0, 0.35),
+	])
+	var grad_tex := GradientTexture1D.new()
+	grad_tex.gradient = gradient
+	_bubble_material.set_shader_parameter("gradient_tex", grad_tex)
+	_bubble_material.set_shader_parameter("caustic_strength", 0.4)
+	_bubble_material.set_shader_parameter("caustic_scale", 0.04)
+	_bubble_material.set_shader_parameter("caustic_speed", 0.3)
+
 	_bubble_sprite.material = _bubble_material
 
 	add_child(_bubble_sprite)
