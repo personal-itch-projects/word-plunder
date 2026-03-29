@@ -22,17 +22,18 @@ func _unhandled_input(event: InputEvent) -> void:
 func _try_click_flock(click_pos: Vector2) -> void:
 	for i in range(flocks.size() - 1, -1, -1):
 		var flock: Node2D = flocks[i]
-		if flock.scorable and flock.get_bounding_rect().has_point(click_pos):
+		if flock.scorable and not flock._popping and flock.get_bounding_rect().has_point(click_pos):
 			var best: Dictionary = flock._get_best_word()
 			var score := _calculate_score(best["word"].length(), best["frequency"])
 			GameManager.add_score(score)
-			_remove_flock(i)
+			flocks.remove_at(i)
+			flock.pop()
 			get_viewport().set_input_as_handled()
 			return
 
 func is_click_on_scorable(click_pos: Vector2) -> bool:
 	for flock in flocks:
-		if flock.scorable and flock.get_bounding_rect().has_point(click_pos):
+		if flock.scorable and not flock._popping and flock.get_bounding_rect().has_point(click_pos):
 			return true
 	return false
 
@@ -47,9 +48,19 @@ func create_flock(letter_nodes: Array[Node2D], spawn_pos: Vector2) -> Node2D:
 	flocks.append(flock)
 	return flock
 
-func check_projectile_collision(proj_rect: Rect2, proj_letter: String) -> Node2D:
+func check_projectile_collision(proj_pos: Vector2, proj_letter: String) -> Node2D:
 	for flock in flocks:
-		if flock.get_bounding_rect().intersects(proj_rect):
+		if flock._popping:
+			continue
+		# Compute metaball field at projectile position - same formula as the shader
+		var local_pos: Vector2 = proj_pos - flock.global_position
+		var field := 0.0
+		var r: float = flock.METABALL_RADIUS
+		for letter in flock.letters:
+			var diff: Vector2 = local_pos - letter.position
+			var dist_sq := diff.length_squared()
+			field += (r * r) / (dist_sq + r * 0.5)
+		if field >= 1.0:
 			return flock
 	return null
 
@@ -59,8 +70,13 @@ func add_letter_to_flock(flock: Node2D, letter_char: String, from_pos: Vector2, 
 	new_letter.set_script(FallingLetterScript)
 	new_letter.letter = letter_char
 	new_letter.velocity = Vector2.ZERO
-	flock.add_letter(new_letter)
+	# Place letter at entry point (local to flock) and give it projectile velocity
+	var entry_local: Vector2 = from_pos - flock.global_position
+	new_letter.position = entry_local
+	flock.add_letter(new_letter, proj_velocity)
 	flock.apply_push(proj_velocity)
+	flock.apply_dent(entry_local)
+	flock.apply_impact(entry_local, proj_velocity)
 	if flock.letters.size() >= WordDictionary.MIN_WORD_LENGTH and flock.possible_words.is_empty():
 		var flock_idx := flocks.find(flock)
 		if flock_idx >= 0:
