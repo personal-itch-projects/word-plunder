@@ -58,14 +58,18 @@ func _draw() -> void:
 	var timer_size := font.get_string_size(timer_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 18)
 	draw_string(font, Vector2(screen_size.x / 2.0 - timer_size.x / 2.0, 62), timer_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 18, Color("#666666"))
 
-	# Lives
-	var lives_text := ""
+	# Lives (heart bubbles)
+	var heart_size := 14.0
+	var heart_gap := 6.0
+	var hearts_total_w := GameManager.MAX_LIVES * (heart_size * 2.0) + (GameManager.MAX_LIVES - 1) * heart_gap
+	var heart_start_x := screen_size.x - hearts_total_w - 20.0
+	var heart_y := 30.0
 	for i in GameManager.MAX_LIVES:
+		var cx := heart_start_x + i * (heart_size * 2.0 + heart_gap) + heart_size
 		if i < GameManager.lives:
-			lives_text += "♥ "
+			_draw_heart(Vector2(cx, heart_y), heart_size, Color("#E63946"), Color("#FF6B7A"))
 		else:
-			lives_text += "♡ "
-	draw_string(font_bold, Vector2(screen_size.x - 200, 40), lives_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 28, Color("#1A1A1A"))
+			_draw_heart(Vector2(cx, heart_y), heart_size, Color("#CCCCCC"), Color("#DDDDDD"))
 
 	# Arsenal
 	if platform and not platform.arsenal.is_empty():
@@ -100,3 +104,26 @@ func _draw_arsenal() -> void:
 		var tx: float = x + CELL_SIZE / 2.0 - text_size.x / 2.0
 		var ty: float = y + CELL_SIZE / 2.0 + text_size.y / 4.0
 		draw_string(font, Vector2(tx, ty), letter, HORIZONTAL_ALIGNMENT_CENTER, -1, ARSENAL_FONT_SIZE, Color("#1A1A1A"))
+
+func _draw_heart(center: Vector2, size: float, fill_color: Color, highlight_color: Color) -> void:
+	# Heart shape from two circles + triangle, drawn as polygon
+	var points := PackedVector2Array()
+	var cx := center.x
+	var cy := center.y
+	var r := size * 0.5
+	# Left lobe
+	for a in range(0, 181):
+		var rad := deg_to_rad(float(a))
+		points.append(Vector2(cx - r + cos(rad) * r, cy - sin(rad) * r))
+	# Right lobe
+	for a in range(0, 181):
+		var rad := deg_to_rad(float(a))
+		points.append(Vector2(cx + r + cos(rad) * r, cy - sin(rad) * r))
+	# Bottom point
+	points.append(Vector2(cx, cy + size * 1.3))
+
+	# Fill
+	if points.size() >= 3:
+		draw_colored_polygon(points, fill_color)
+	# Highlight circle on upper-left lobe for bubble shine
+	draw_circle(Vector2(cx - r * 0.5, cy - r * 0.5), r * 0.3, highlight_color)
