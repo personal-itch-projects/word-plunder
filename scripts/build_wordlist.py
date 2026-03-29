@@ -2,7 +2,7 @@
 """Download and build frequency word lists for English and Russian.
 
 English: FrequencyWords (OpenSubtitles 2018) from hermitdave/FrequencyWords on GitHub.
-Russian: FrequencyWords + Ozhegov dictionary cross-reference.
+Russian: Ozhegov dictionary (primary word source) with FrequencyWords for frequency scoring.
 """
 
 import argparse
@@ -118,26 +118,59 @@ def _load_ozhegov_words() -> set[str]:
     return words
 
 
-def build_russian(skip_ozhegov: bool = False) -> None:
-    lemmas: set[str] | None = None
-    if not skip_ozhegov:
-        try:
-            lemmas = _load_ozhegov_words()
-        except Exception as e:
-            print(f"[ru] WARNING: Ozhegov download failed ({e}), skipping cross-reference")
-
+def _load_freq_ru() -> dict[str, int]:
+    """Download FrequencyWords Russian list and return word->frequency map."""
     print("[ru] Downloading FrequencyWords Russian list ...")
     raw = _download(FREQ_RU_URL).decode("utf-8")
-    normalise_ru = lambda w: w.replace("ё", "е")
-    all_words = _parse_freq_lines(raw, RU_RE, normalise=normalise_ru)
-    if lemmas is not None:
-        words = [(w, c) for w, c in all_words if w in lemmas]
-        print(f"[ru] Parsed {len(all_words)} valid words, {len(words)} in Ozhegov")
-    else:
-        words = all_words
+    freq_map: dict[str, int] = {}
+    for line in raw.splitlines():
+        parts = line.split()
+        if len(parts) != 2:
+            continue
+        word = parts[0].lower().replace("ё", "е")
+        try:
+            count = int(parts[1])
+        except ValueError:
+            continue
+        if len(word) >= MIN_LEN and RU_RE.match(word):
+            freq_map[word] = count
+    print(f"[ru] Loaded {len(freq_map)} frequency entries")
+    return freq_map
+
+
+def build_russian(skip_ozhegov: bool = False) -> None:
+    if skip_ozhegov:
+        # Fallback: frequency-only mode (no Ozhegov)
+        print("[ru] Downloading FrequencyWords Russian list ...")
+        raw = _download(FREQ_RU_URL).decode("utf-8")
+        normalise_ru = lambda w: w.replace("ё", "е")
+        words = _parse_freq_lines(raw, RU_RE, normalise=normalise_ru)
         print(f"[ru] Parsed {len(words)} valid words (no Ozhegov filter)")
-    keep = _apply_cumulative_cutoff(words)
-    _write_csv(keep, OUT_DIR / "words.ru.csv")
+        keep = _apply_cumulative_cutoff(words)
+        _write_csv(keep, OUT_DIR / "words.ru.csv")
+        return
+
+    # Primary source: Ozhegov dictionary
+    try:
+        ozhegov_words = _load_ozhegov_words()
+    except Exception as e:
+        print(f"[ru] ERROR: Ozhegov download failed ({e}), falling back to frequency-only")
+        build_russian(skip_ozhegov=True)
+        return
+
+    # Frequency data for scoring
+    freq_map = _load_freq_ru()
+
+    # Build word list: all Ozhegov words with MIN_LEN+, scored by frequency
+    DEFAULT_FREQ = 1  # rare/unscored words get minimum frequency (highest score)
+    words: list[tuple[str, int]] = []
+    for word in sorted(ozhegov_words):
+        if len(word) >= MIN_LEN:
+            words.append((word, freq_map.get(word, DEFAULT_FREQ)))
+
+    print(f"[ru] {len(words)} Ozhegov words (>={MIN_LEN} chars), "
+          f"{sum(1 for _, f in words if f > DEFAULT_FREQ)} with frequency data")
+    _write_csv(words, OUT_DIR / "words.ru.csv")
 
 
 if __name__ == "__main__":
