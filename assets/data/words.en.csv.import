@@ -1,19 +1,8 @@
 [remap]
 
-importer="csv_translation"
-type="Translation"
-uid="uid://gfv7nsqn87c6"
+importer="keep"
 
 [deps]
 
-files=["res://assets/data/words.en.FREQcount.translation"]
-
 source_file="res://assets/data/words.en.csv"
-dest_files=["res://assets/data/words.en.FREQcount.translation"]
-
-[params]
-
-compress=1
-delimiter=0
-unescape_keys=false
-unescape_translations=true
+dest_files=["res://assets/data/words.en.csv"]
