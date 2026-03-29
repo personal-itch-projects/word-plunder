@@ -110,19 +110,6 @@ func _process(delta: float) -> void:
 		for _i in TRAIL_PARTICLES_PER_SPAWN:
 			_spawn_trail_particle()
 
-	# Age and remove trail particles
-	for child in _trail_container.get_children():
-		var age: float = child.get_meta("age") + delta
-		child.set_meta("age", age)
-		var ttl: float = child.get_meta("ttl")
-		var t := age / ttl
-		if t >= 1.0:
-			child.queue_free()
-		else:
-			var s: float = child.get_meta("base_scale") * (1.0 - t)
-			child.scale = Vector2(s, s)
-			child.modulate.a = 1.0 - t * t
-
 	# Check collision with flocks (circle-based)
 	var hit_flock: Node2D = flock_manager.check_projectile_collision(global_position, letter)
 	if hit_flock:
@@ -144,10 +131,14 @@ func _spawn_trail_particle() -> void:
 		randf_range(-TRAIL_SPREAD, TRAIL_SPREAD),
 		randf_range(-TRAIL_SPREAD, TRAIL_SPREAD),
 	)
-	sprite.set_meta("age", 0.0)
-	sprite.set_meta("ttl", randf_range(TRAIL_MIN_TTL, TRAIL_MAX_TTL))
-	sprite.set_meta("base_scale", s)
 	_trail_container.add_child(sprite)
+
+	var ttl := randf_range(TRAIL_MIN_TTL, TRAIL_MAX_TTL)
+	var tween := sprite.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(sprite, "scale", Vector2.ZERO, ttl).set_ease(Tween.EASE_IN)
+	tween.tween_property(sprite, "modulate:a", 0.0, ttl).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+	tween.chain().tween_callback(sprite.queue_free)
 
 func _draw() -> void:
 	if font == null:
