@@ -20,6 +20,7 @@ EN_RE = re.compile(r"^[a-z]+$")
 RU_RE = re.compile(r"^[а-яё]+$")
 
 FREQ_EN_URL = "https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/en/en_full.txt"
+ENABLE_URL = "https://raw.githubusercontent.com/dolph/dictionary/master/enable1.txt"
 FREQ_RU_URL = "https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/ru/ru_full.txt"
 OPENCORPORA_URL = "https://opencorpora.org/files/export/dict/opcorpora-dict.xml.bz2"
 
@@ -79,11 +80,23 @@ def _write_csv(words: list[tuple[str, int]], path: Path) -> None:
 
 # --- English ---
 
+def _load_enable_words() -> set[str]:
+    """Download ENABLE word list (standard word-game dictionary)."""
+    print("[en] Downloading ENABLE word list ...")
+    raw = _download(ENABLE_URL).decode("utf-8")
+    words = {w.strip().lower() for w in raw.splitlines() if w.strip()}
+    print(f"[en] Loaded {len(words)} ENABLE dictionary words")
+    return words
+
+
 def build_english() -> None:
+    enable = _load_enable_words()
+
     print("[en] Downloading FrequencyWords English list ...")
     raw = _download(FREQ_EN_URL).decode("utf-8")
-    words = _parse_freq_lines(raw, EN_RE)
-    print(f"[en] Parsed {len(words)} valid words")
+    all_words = _parse_freq_lines(raw, EN_RE)
+    words = [(w, c) for w, c in all_words if w in enable]
+    print(f"[en] Parsed {len(all_words)} valid words, {len(words)} in ENABLE")
     keep = _apply_cumulative_cutoff(words)
     _write_csv(keep, OUT_DIR / "words.en.csv")
 
