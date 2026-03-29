@@ -19,6 +19,7 @@ const HOVER_SPREAD_SPEED := 3.0
 var letters: Array[Node2D] = []
 var _letter_float_data: Array = []
 var _home_positions: Array[Vector2] = []
+var _layout_span: float = 0.0
 var _popping: bool = false
 var _hovered: bool = false
 var _hover_amount: float = 0.0
@@ -92,29 +93,44 @@ func _build_letters(text: String) -> void:
 
 	var upper := text.to_upper()
 	var char_width := 18.0
-	var total_width := upper.length() * char_width
-	var start_x := -total_width / 2.0 + char_width / 2.0
+	var word_gap := 20.0
 
+	# Compute total layout span: sum of word widths + gaps between words
+	var words := upper.split(" ", false)
+	var total_width := 0.0
+	for wi in words.size():
+		total_width += words[wi].length() * char_width
+		if wi < words.size() - 1:
+			total_width += word_gap
+	_layout_span = total_width
+
+	var cursor_x := -total_width / 2.0 + char_width / 2.0
 	var FallingLetterScript := preload("res://src/letters/falling_letter.gd")
-	for i in upper.length():
-		var home := Vector2(start_x + i * char_width, 0.0)
-		_home_positions.append(home)
 
-		var letter_node := Node2D.new()
-		letter_node.set_script(FallingLetterScript)
-		letter_node.letter = upper[i]
-		letter_node.velocity = Vector2.ZERO
-		letter_node.position = home
-		letter_node.set_process(false)
-		add_child(letter_node)
-		letters.append(letter_node)
+	for wi in words.size():
+		var word: String = words[wi]
+		for ci in word.length():
+			var home := Vector2(cursor_x, 0.0)
+			_home_positions.append(home)
 
-		var angle := randf() * TAU
-		_letter_float_data.append({
-			"velocity": Vector2(cos(angle), sin(angle)) * randf_range(5.0, 15.0),
-			"drift_angle": randf() * TAU,
-			"drift_speed": randf_range(1.5, 3.0),
-		})
+			var letter_node := Node2D.new()
+			letter_node.set_script(FallingLetterScript)
+			letter_node.letter = word[ci]
+			letter_node.velocity = Vector2.ZERO
+			letter_node.position = home
+			letter_node.set_process(false)
+			add_child(letter_node)
+			letters.append(letter_node)
+
+			var angle := randf() * TAU
+			_letter_float_data.append({
+				"velocity": Vector2(cos(angle), sin(angle)) * randf_range(5.0, 15.0),
+				"drift_angle": randf() * TAU,
+				"drift_speed": randf_range(1.5, 3.0),
+			})
+			cursor_x += char_width
+		if wi < words.size() - 1:
+			cursor_x += word_gap
 	move_child(_bubble_sprite, -1)
 
 func rebuild(text: String) -> void:
@@ -147,8 +163,7 @@ func _process(delta: float) -> void:
 	# Hover detection (rectangular to match bubble shape)
 	var mouse_pos := get_viewport().get_mouse_position()
 	var local_mouse := mouse_pos - global_position
-	var char_width := 18.0
-	var half_w: float = letters.size() * char_width / 2.0 + METABALL_RADIUS
+	var half_w: float = _layout_span / 2.0 + METABALL_RADIUS
 	var half_h: float = METABALL_RADIUS + 10.0
 	_hovered = absf(local_mouse.x) < half_w and absf(local_mouse.y) < half_h
 
@@ -255,7 +270,7 @@ func _update_bubble_uniforms() -> void:
 		return
 	# Compute rectangular extents: wide for horizontal letter spread, short vertically
 	var char_width := 18.0
-	var half_w: float = letters.size() * char_width / 2.0 + METABALL_RADIUS + BUBBLE_PADDING
+	var half_w: float = _layout_span / 2.0 + METABALL_RADIUS + BUBBLE_PADDING
 	var half_h: float = METABALL_RADIUS + BUBBLE_PADDING + 10.0
 	_bubble_sprite.scale = Vector2(half_w, half_h)
 	var rect_size := Vector2(half_w * 2.0, half_h * 2.0)
@@ -264,7 +279,7 @@ func _update_bubble_uniforms() -> void:
 	var positions: Array[Vector2] = []
 	for l in letters:
 		positions.append(l.position)
-	while positions.size() < 16:
+	while positions.size() < 32:
 		positions.append(Vector2(-9999.0, -9999.0))
 	_bubble_material.set_shader_parameter("ball_positions", positions)
 	_bubble_material.set_shader_parameter("hover_center", _hover_center)

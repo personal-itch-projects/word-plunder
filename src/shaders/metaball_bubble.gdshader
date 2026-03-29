@@ -5,7 +5,7 @@ shader_type canvas_item;
 // Uses gradient texture lookup (2DMetaballs style) + animated Voronoi caustics.
 
 uniform int ball_count = 0;
-uniform vec2 ball_positions[16];
+uniform vec2 ball_positions[32];
 uniform float ball_radius = 24.0;
 uniform vec2 rect_size = vec2(200.0, 200.0);
 uniform float threshold = 1.0;

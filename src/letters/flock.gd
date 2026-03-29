@@ -326,7 +326,7 @@ func _update_bubble_uniforms() -> void:
 	var positions: Array[Vector2] = []
 	for l in letters:
 		positions.append(l.position)
-	while positions.size() < 16:
+	while positions.size() < 32:
 		positions.append(Vector2(-9999.0, -9999.0))
 	_bubble_material.set_shader_parameter("ball_positions", positions)
 	_bubble_material.set_shader_parameter("dent_pos", _dent_pos)
