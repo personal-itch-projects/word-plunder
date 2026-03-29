@@ -26,7 +26,7 @@ const DENT_RADIUS := 30.0
 var letters: Array[Node2D] = []
 var velocity: Vector2 = Vector2.ZERO
 var scorable: bool = false
-var possible_words: Array = []
+var best_word: Dictionary = {}  # {word, frequency} or {}
 var push_velocity: Vector2 = Vector2.ZERO
 var _letter_float_data: Array = []
 var _dent_pos: Vector2 = Vector2.ZERO
@@ -89,15 +89,12 @@ func _update_possible_words() -> void:
 	for l in letters:
 		letter_chars.append(l.letter)
 	if letters.size() < WordDictionary.MIN_WORD_LENGTH:
-		possible_words = []
+		best_word = {}
 		scorable = false
 		_update_scorable_visual()
 		return
-	if possible_words.is_empty():
-		possible_words = WordDictionary.find_possible_words(letter_chars)
-	else:
-		possible_words = WordDictionary.filter_possible_words(possible_words, letter_chars)
-	scorable = not possible_words.is_empty()
+	best_word = WordDictionary.find_longest_word(letter_chars)
+	scorable = not best_word.is_empty()
 	_update_scorable_visual()
 
 func _update_scorable_visual() -> void:
@@ -124,15 +121,7 @@ func apply_impact(impact_pos_local: Vector2, proj_velocity: Vector2) -> void:
 		_letter_float_data[i]["velocity"] += diff.normalized() * impact_strength * falloff
 
 func _get_best_word() -> Dictionary:
-	if possible_words.is_empty():
-		return {}
-	var best: Dictionary = possible_words[0]
-	for entry in possible_words:
-		if entry["word"].length() > best["word"].length():
-			best = entry
-		elif entry["word"].length() == best["word"].length() and entry["frequency"] < best["frequency"]:
-			best = entry
-	return best
+	return best_word
 
 func pop() -> void:
 	if _popping:
@@ -310,7 +299,7 @@ func _draw() -> void:
 		var bubble_r := _get_bubble_radius()
 		var best := _get_best_word()
 		if not best.is_empty():
-			var label := "%s (%d)" % [best["word"].to_upper(), possible_words.size()]
+			var label := best["word"].to_upper()
 			var text_size := font.get_string_size(label, HORIZONTAL_ALIGNMENT_CENTER, -1, 16)
 			var text_x := -text_size.x / 2.0
 			var text_y := -bubble_r - 6

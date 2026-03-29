@@ -77,7 +77,7 @@ func add_letter_to_flock(flock: Node2D, letter_char: String, from_pos: Vector2, 
 	flock.apply_push(proj_velocity)
 	flock.apply_dent(entry_local)
 	flock.apply_impact(entry_local, proj_velocity)
-	if flock.letters.size() >= WordDictionary.MIN_WORD_LENGTH and flock.possible_words.is_empty():
+	if flock.letters.size() >= WordDictionary.MIN_WORD_LENGTH and not flock.scorable:
 		# Check if adding more letters could ever form a word
 		var letter_chars: Array[String] = []
 		for l in flock.letters:

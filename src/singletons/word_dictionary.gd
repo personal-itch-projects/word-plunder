@@ -21,13 +21,21 @@ const RUSSIAN_LETTER_FREQ: Dictionary = {
 	"ф": 0.26, "ъ": 0.04, "ё": 0.04,
 }
 
-var anagram_table: Dictionary = {}   # sorted_key -> Array[{word, frequency}]
 var word_table: Dictionary = {}      # word -> frequency (exact match)
 var letter_count_table: Dictionary = {} # word -> {letter -> count}
 var language: String = "en"           # "en" or "ru"
 var letter_weights: Dictionary = {}   # letter -> float weight
 var _weight_total: float = 0.0
 var _alphabet: String = ""
+
+# Trie: each node is { "c": { char -> node }, "w": "" or word_string }
+var _trie_root: Dictionary = {}
+
+# DFS state for find_longest_word
+var _best_length: int = 0
+var _best_word: String = ""
+var _best_freq: int = 0
+var _weight_sum: float = 0.0
 
 signal language_changed(lang: String)
 
@@ -36,10 +44,10 @@ func _ready() -> void:
 
 func load_dictionary(lang: String) -> void:
 	language = lang
-	anagram_table.clear()
 	word_table.clear()
 	letter_count_table.clear()
-	var path := "res://assets/data/%s.%s.csv" % [GameManager.datasource, lang]
+	_trie_root = {"c": {}, "w": ""}
+	var path := "res://assets/data/words.%s.csv" % lang
 	var check_fn: Callable = _is_alpha if lang == "en" else _is_cyrillic
 	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
@@ -59,14 +67,74 @@ func load_dictionary(lang: String) -> void:
 			continue
 		if not check_fn.call(word):
 			continue
-		var key := _sort_letters(word)
-		if not anagram_table.has(key):
-			anagram_table[key] = []
-		anagram_table[key].append({"word": word, "frequency": freq})
 		word_table[word] = freq
 		letter_count_table[word] = _count_letters(word)
+		_trie_insert(word)
 	_compute_letter_weights()
 	language_changed.emit(lang)
+
+func _trie_insert(word: String) -> void:
+	var node := _trie_root
+	for i in word.length():
+		var ch := word[i]
+		if not node["c"].has(ch):
+			node["c"][ch] = {"c": {}, "w": ""}
+		node = node["c"][ch]
+	node["w"] = word
+
+func find_longest_word(letters: Array[String]) -> Dictionary:
+	# Build letter budget: char -> count
+	var budget: Dictionary = {}
+	for l in letters:
+		var ch := l.to_lower()
+		budget[ch] = budget.get(ch, 0) + 1
+	_best_length = 0
+	_best_word = ""
+	_best_freq = 0
+	_weight_sum = 0.0
+	_trie_dfs(_trie_root, budget, 0)
+	if _best_word.is_empty():
+		return {}
+	return {"word": _best_word, "frequency": _best_freq}
+
+func _trie_dfs(node: Dictionary, budget: Dictionary, depth: int) -> void:
+	if not node["w"].is_empty() and depth >= MIN_WORD_LENGTH:
+		var freq: int = word_table[node["w"]]
+		var weight: float = float(freq)
+		if depth > _best_length:
+			_best_length = depth
+			_best_word = node["w"]
+			_best_freq = freq
+			_weight_sum = weight
+		elif depth == _best_length:
+			_weight_sum += weight
+			if randf() < weight / _weight_sum:
+				_best_word = node["w"]
+				_best_freq = freq
+	for ch in node["c"]:
+		if budget.get(ch, 0) > 0:
+			budget[ch] -= 1
+			_trie_dfs(node["c"][ch], budget, depth + 1)
+			budget[ch] += 1
+
+func can_form_any_word(letters: Array[String]) -> bool:
+	var budget: Dictionary = {}
+	for l in letters:
+		var ch := l.to_lower()
+		budget[ch] = budget.get(ch, 0) + 1
+	return _trie_any(_trie_root, budget, 0)
+
+func _trie_any(node: Dictionary, budget: Dictionary, depth: int) -> bool:
+	if not node["w"].is_empty() and depth >= MIN_WORD_LENGTH:
+		return true
+	for ch in node["c"]:
+		if budget.get(ch, 0) > 0:
+			budget[ch] -= 1
+			if _trie_any(node["c"][ch], budget, depth + 1):
+				budget[ch] += 1
+				return true
+			budget[ch] += 1
+	return false
 
 func _is_alpha(text: String) -> bool:
 	for i in text.length():
@@ -83,13 +151,6 @@ func _is_cyrillic(text: String) -> bool:
 			return false
 	return true
 
-func _sort_letters(text: String) -> String:
-	var chars: Array = []
-	for i in text.length():
-		chars.append(text[i])
-	chars.sort()
-	return "".join(chars)
-
 func _count_letters(text: String) -> Dictionary:
 	var counts: Dictionary = {}
 	for i in text.length():
@@ -102,24 +163,6 @@ func _is_multiset_subset(subset: Dictionary, superset: Dictionary) -> bool:
 		if superset.get(c, 0) < subset[c]:
 			return false
 	return true
-
-func find_possible_words(letters: Array[String]) -> Array:
-	var flock_counts := _count_letters("".join(letters).to_lower())
-	var results: Array = []
-	for word in word_table:
-		if word.length() > letters.size():
-			continue
-		if _is_multiset_subset(letter_count_table[word], flock_counts):
-			results.append({"word": word, "frequency": word_table[word]})
-	return results
-
-func filter_possible_words(possible_words: Array, letters: Array[String]) -> Array:
-	var flock_counts := _count_letters("".join(letters).to_lower())
-	var results: Array = []
-	for entry in possible_words:
-		if _is_multiset_subset(letter_count_table[entry["word"]], flock_counts):
-			results.append(entry)
-	return results
 
 func can_form_word_with_additions(letters: Array[String]) -> bool:
 	# Check if ANY dictionary word contains the current letters as a subset

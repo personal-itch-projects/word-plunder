@@ -23,7 +23,6 @@ var bindings: Dictionary = {
 	"move_right": KEY_D,
 }
 var language: String = "en"
-var datasource: String = "lemma"
 
 var previous_state: GameState.State = GameState.State.MAIN_MENU
 var is_resuming: bool = false
@@ -38,8 +37,6 @@ var _translations: Dictionary = {
 	"Press key...": {"en": "Press key...", "ru": "Нажмите..."},
 	"Language: English": {"en": "Language: English", "ru": "Язык: English"},
 	"Language: Russian": {"en": "Language: Russian", "ru": "Язык: Русский"},
-	"Dict: Lemma": {"en": "Dict: Lemma", "ru": "Словарь: Lemma"},
-	"Dict: Wiktionary": {"en": "Dict: Wiktionary", "ru": "Словарь: Wiktionary"},
 	"SCORE": {"en": "SCORE", "ru": "СЧЁТ"},
 	"LEVEL": {"en": "LEVEL", "ru": "УРОВЕНЬ"},
 	"GAME OVER": {"en": "GAME OVER", "ru": "КОНЕЦ ИГРЫ"},
