@@ -60,18 +60,37 @@ func _setup_trail() -> void:
 	add_child(_trail)
 
 func _setup_bubble() -> void:
-	# Create a texture for the shader to work on
-	var img := Image.create(64, 64, false, Image.FORMAT_RGBA8)
+	var img := Image.create(2, 2, false, Image.FORMAT_RGBA8)
 	img.fill(Color.WHITE)
 	var tex := ImageTexture.create_from_image(img)
 
 	_bubble_sprite = Sprite2D.new()
 	_bubble_sprite.texture = tex
-	_bubble_sprite.scale = Vector2(BUBBLE_SIZE / 64.0, BUBBLE_SIZE / 64.0)
+	_bubble_sprite.scale = Vector2(BUBBLE_SIZE, BUBBLE_SIZE)
 
-	var shader := preload("res://src/shaders/projectile_bubble.gdshader")
+	var shader := preload("res://src/shaders/metaball_bubble.gdshader")
 	_bubble_material = ShaderMaterial.new()
 	_bubble_material.shader = shader
+	_bubble_material.set_shader_parameter("ball_count", 1)
+	_bubble_material.set_shader_parameter("ball_positions", [Vector2.ZERO])
+	_bubble_material.set_shader_parameter("ball_radius", BUBBLE_SIZE * 0.45)
+	_bubble_material.set_shader_parameter("rect_size", Vector2(BUBBLE_SIZE, BUBBLE_SIZE))
+
+	var gradient := Gradient.new()
+	gradient.offsets = PackedFloat32Array([0.0, 0.15, 0.5, 1.0])
+	gradient.colors = PackedColorArray([
+		Color(0.85, 0.93, 1.0, 0.55),
+		Color(0.78, 0.90, 1.0, 0.45),
+		Color(0.70, 0.85, 1.0, 0.30),
+		Color(0.65, 0.82, 1.0, 0.25),
+	])
+	var grad_tex := GradientTexture1D.new()
+	grad_tex.gradient = gradient
+	_bubble_material.set_shader_parameter("gradient_tex", grad_tex)
+	_bubble_material.set_shader_parameter("caustic_strength", 0.4)
+	_bubble_material.set_shader_parameter("caustic_scale", 0.06)
+	_bubble_material.set_shader_parameter("caustic_speed", 0.5)
+
 	_bubble_sprite.material = _bubble_material
 
 	# Insert behind the letter text (drawn via _draw)
@@ -89,9 +108,6 @@ func _process(delta: float) -> void:
 		position.x = screen_width
 		velocity.x = -velocity.x
 
-	# Update bubble stretch based on velocity direction
-	_update_bubble_stretch()
-
 	# Update trail
 	_update_trail(delta)
 
@@ -105,15 +121,6 @@ func _process(delta: float) -> void:
 	# Remove if off screen top
 	if position.y < -50:
 		queue_free()
-
-func _update_bubble_stretch() -> void:
-	if not _bubble_material:
-		return
-	var speed := velocity.length()
-	var stretch_amount := clampf(1.0 + speed / SPEED * 0.3, 1.0, 1.5)
-	var angle := atan2(velocity.y, velocity.x)
-	_bubble_material.set_shader_parameter("stretch", stretch_amount)
-	_bubble_material.set_shader_parameter("stretch_angle", angle)
 
 func _update_trail(delta: float) -> void:
 	_trail_timer += delta
