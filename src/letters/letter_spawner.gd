@@ -36,16 +36,21 @@ func _spawn_letter() -> void:
 	var t3: int = cfg.get("theme_3_pct", 0)
 
 	if roll < t1:
-		if _spawn_theme_word(1):
+		if _spawn_word_flock(1):
 			return
 	elif roll < t1 + t2:
-		if _spawn_theme_word(2):
+		if _spawn_word_flock(2):
 			return
 	elif roll < t1 + t2 + t3:
-		if _spawn_theme_word(3):
+		if _spawn_word_flock(3):
 			return
 	# Fallback: random single letter
 	_spawn_single_letter()
+
+func _spawn_word_flock(gaps: int) -> bool:
+	if GameManager.themed_levels_enabled:
+		return _spawn_theme_word(gaps)
+	return _spawn_random_word(gaps)
 
 func _spawn_theme_word(gaps: int) -> bool:
 	var min_len := gaps + WordDictionary.MIN_WORD_LENGTH
@@ -80,6 +85,23 @@ func _spawn_theme_word(gaps: int) -> bool:
 		else:
 			missing.append(ch)
 	flock.set_debug_info(upper_word, missing)
+	return true
+
+func _spawn_random_word(gaps: int) -> bool:
+	var kept_letters := WordDictionary.pick_partial_word(gaps)
+	if kept_letters.is_empty():
+		return false
+	var x_pos := _find_free_x_position(kept_letters.size())
+	if x_pos < 0:
+		return false
+	var FallingLetterScript := preload("res://src/letters/falling_letter.gd")
+	var letter_nodes: Array[Node2D] = []
+	for letter_char in kept_letters:
+		var letter_node := Node2D.new()
+		letter_node.set_script(FallingLetterScript)
+		letter_node.setup(letter_char, Vector2.ZERO)
+		letter_nodes.append(letter_node)
+	flock_manager.create_flock(letter_nodes, Vector2(x_pos, -30))
 	return true
 
 func _spawn_single_letter() -> void:

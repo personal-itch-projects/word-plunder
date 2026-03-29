@@ -41,6 +41,7 @@ var bindings: Dictionary = {
 }
 var language: String = "en"
 var theme_intro_enabled: bool = false
+var themed_levels_enabled: bool = false
 
 var previous_state: GameState.State = GameState.State.MAIN_MENU
 var is_resuming: bool = false
