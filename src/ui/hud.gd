@@ -106,24 +106,18 @@ func _draw_arsenal() -> void:
 		draw_string(font, Vector2(tx, ty), letter, HORIZONTAL_ALIGNMENT_CENTER, -1, ARSENAL_FONT_SIZE, Color("#1A1A1A"))
 
 func _draw_heart(center: Vector2, size: float, fill_color: Color, highlight_color: Color) -> void:
-	# Heart shape from two circles + triangle, drawn as polygon
-	var points := PackedVector2Array()
 	var cx := center.x
 	var cy := center.y
-	var r := size * 0.5
-	# Left lobe
-	for a in range(0, 181):
-		var rad := deg_to_rad(float(a))
-		points.append(Vector2(cx - r + cos(rad) * r, cy - sin(rad) * r))
-	# Right lobe
-	for a in range(0, 181):
-		var rad := deg_to_rad(float(a))
-		points.append(Vector2(cx + r + cos(rad) * r, cy - sin(rad) * r))
-	# Bottom point
-	points.append(Vector2(cx, cy + size * 1.3))
-
-	# Fill
-	if points.size() >= 3:
-		draw_colored_polygon(points, fill_color)
-	# Highlight circle on upper-left lobe for bubble shine
-	draw_circle(Vector2(cx - r * 0.5, cy - r * 0.5), r * 0.3, highlight_color)
+	var r := size * 0.45
+	# Two filled circles for the lobes
+	draw_circle(Vector2(cx - r, cy), r, fill_color)
+	draw_circle(Vector2(cx + r, cy), r, fill_color)
+	# Triangle to fill the bottom and gap between lobes
+	var tri := PackedVector2Array([
+		Vector2(cx - r * 2.0, cy),
+		Vector2(cx + r * 2.0, cy),
+		Vector2(cx, cy + r * 2.4),
+	])
+	draw_colored_polygon(tri, fill_color)
+	# Highlight for bubble shine
+	draw_circle(Vector2(cx - r * 0.6, cy - r * 0.4), r * 0.3, highlight_color)
