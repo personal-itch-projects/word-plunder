@@ -4,12 +4,13 @@ const SPEED := 800.0
 const SIZE := 15.0
 
 # Trail: spawn soft circle particles at random offsets with random TTL
-const TRAIL_SPAWN_INTERVAL := 0.025
-const TRAIL_PARTICLE_MIN_SIZE := 6.0
-const TRAIL_PARTICLE_MAX_SIZE := 14.0
+const TRAIL_SPAWN_INTERVAL := 0.008
+const TRAIL_PARTICLES_PER_SPAWN := 3
+const TRAIL_PARTICLE_MIN_SIZE := 8.0
+const TRAIL_PARTICLE_MAX_SIZE := 18.0
 const TRAIL_MIN_TTL := 0.15
-const TRAIL_MAX_TTL := 0.4
-const TRAIL_SPREAD := 10.0
+const TRAIL_MAX_TTL := 0.45
+const TRAIL_SPREAD := 6.0
 
 # Bubble visual
 const BUBBLE_SIZE := 24.0
@@ -106,7 +107,8 @@ func _process(delta: float) -> void:
 	_trail_timer += delta
 	if _trail_timer >= TRAIL_SPAWN_INTERVAL:
 		_trail_timer = 0.0
-		_spawn_trail_particle()
+		for _i in TRAIL_PARTICLES_PER_SPAWN:
+			_spawn_trail_particle()
 
 	# Age and remove trail particles
 	for child in _trail_container.get_children():
