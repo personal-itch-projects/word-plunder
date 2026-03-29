@@ -146,7 +146,7 @@ func _run_theme_intro() -> void:
 	flock_manager.input_blocked = true
 
 	# Position rows
-	var row1_y := screen_size.y * 0.35
+	var row1_y := screen_size.y * 0.20
 	var row2_y := screen_size.y * 0.50
 	var row1_positions := _calc_row_positions(row1_words, row1_y, bounds)
 	var row2_positions := _calc_row_positions(row2_words, row2_y, bounds)
@@ -202,10 +202,10 @@ func _run_theme_intro() -> void:
 			var idx: int = flock_manager.flocks.find(data.flock)
 			if idx >= 0:
 				flock_manager.flocks.remove_at(idx)
-			data.flock.pop_word(data.word)
+			data.flock.pop_word(data.word, 1.0, 2.0)
 
-	# Wait for pop animation
-	await get_tree().create_timer(1.5).timeout
+	# Wait for pop animation (0.3s arrange + hold + fade)
+	await get_tree().create_timer(3.5).timeout
 	if not _intro_running:
 		return
 

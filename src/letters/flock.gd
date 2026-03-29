@@ -157,7 +157,7 @@ func pop() -> void:
 		queue_free()
 	)
 
-func pop_word(word: String) -> void:
+func pop_word(word: String, hold_time: float = 0.0, fade_time: float = 1.3) -> void:
 	if _popping:
 		return
 	_popping = true
@@ -210,8 +210,8 @@ func pop_word(word: String) -> void:
 			_letter_float_data[li]["velocity"] = dir * randf_range(150.0, 300.0)
 			tween.tween_property(letters[li], "modulate:a", 0.0, 0.3)
 
-	# Fade whole flock starting immediately in parallel, completes at 1.3s
-	tween.tween_property(self, "modulate:a", 0.0, 1.3).set_ease(Tween.EASE_IN).set_delay(0.3)
+	# Fade whole flock after hold period
+	tween.tween_property(self, "modulate:a", 0.0, fade_time).set_ease(Tween.EASE_IN).set_delay(0.3 + hold_time)
 
 	tween.chain().tween_callback(func():
 		remove_all()
