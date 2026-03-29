@@ -5,29 +5,30 @@ signal score_changed(new_score: int)
 signal level_changed(new_level: int)
 signal goal_progress_changed
 signal stage_completed(stage: int)
+signal theme_changed(theme_name: String)
 
 const BOTTOM_PENALTY := 10
 const PLAY_AREA_WIDTH := 800.0
 const MIN_WINDOW_SIZE := Vector2i(960, 540)
 const LEVELS := [
-	# Stage 1 — Form N words (any)
-	{ "goal_type": "words", "goal_target": 10, "goal_word_length": 0, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 1.2, "spawn_max": 2.5, "missing_letters": 0 },
-	{ "goal_type": "words", "goal_target": 20, "goal_word_length": 0, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 1.1, "spawn_max": 2.4, "missing_letters": 0 },
-	{ "goal_type": "words", "goal_target": 30, "goal_word_length": 0, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 1.0, "spawn_max": 2.3, "missing_letters": 0 },
-	{ "goal_type": "words", "goal_target": 50, "goal_word_length": 0, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 0.95, "spawn_max": 2.2, "missing_letters": 0 },
-	{ "goal_type": "words", "goal_target": 70, "goal_word_length": 0, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 0.9, "spawn_max": 2.1, "missing_letters": 0 },
-	# Stage 2 — Earn N points (per-level)
-	{ "goal_type": "score", "goal_target": 150, "goal_word_length": 0, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 0.85, "spawn_max": 2.0, "missing_letters": 0 },
-	{ "goal_type": "score", "goal_target": 300, "goal_word_length": 0, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 0.8, "spawn_max": 1.9, "missing_letters": 0 },
-	{ "goal_type": "score", "goal_target": 500, "goal_word_length": 0, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 0.75, "spawn_max": 1.8, "missing_letters": 0 },
-	{ "goal_type": "score", "goal_target": 750, "goal_word_length": 0, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 0.7, "spawn_max": 1.6, "missing_letters": 0 },
-	{ "goal_type": "score", "goal_target": 1000, "goal_word_length": 0, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 0.65, "spawn_max": 1.5, "missing_letters": 0 },
+	# Stage 1 — Form N words  (theme_1/2/3_pct = chance of theme flock with 1/2/3 missing letters)
+	{ "goal_type": "words", "goal_target": 10, "goal_word_length": 0, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 1.2, "spawn_max": 2.5, "theme_1_pct": 60, "theme_2_pct": 10, "theme_3_pct": 0 },
+	{ "goal_type": "words", "goal_target": 20, "goal_word_length": 0, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 1.1, "spawn_max": 2.4, "theme_1_pct": 55, "theme_2_pct": 15, "theme_3_pct": 0 },
+	{ "goal_type": "words", "goal_target": 30, "goal_word_length": 0, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 1.0, "spawn_max": 2.3, "theme_1_pct": 45, "theme_2_pct": 20, "theme_3_pct": 5 },
+	{ "goal_type": "words", "goal_target": 50, "goal_word_length": 0, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 0.95, "spawn_max": 2.2, "theme_1_pct": 40, "theme_2_pct": 25, "theme_3_pct": 5 },
+	{ "goal_type": "words", "goal_target": 70, "goal_word_length": 0, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 0.9, "spawn_max": 2.1, "theme_1_pct": 35, "theme_2_pct": 25, "theme_3_pct": 10 },
+	# Stage 2 — Earn N points
+	{ "goal_type": "score", "goal_target": 150, "goal_word_length": 0, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 0.85, "spawn_max": 2.0, "theme_1_pct": 30, "theme_2_pct": 30, "theme_3_pct": 10 },
+	{ "goal_type": "score", "goal_target": 300, "goal_word_length": 0, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 0.8, "spawn_max": 1.9, "theme_1_pct": 25, "theme_2_pct": 30, "theme_3_pct": 15 },
+	{ "goal_type": "score", "goal_target": 500, "goal_word_length": 0, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 0.75, "spawn_max": 1.8, "theme_1_pct": 20, "theme_2_pct": 30, "theme_3_pct": 20 },
+	{ "goal_type": "score", "goal_target": 750, "goal_word_length": 0, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 0.7, "spawn_max": 1.6, "theme_1_pct": 15, "theme_2_pct": 30, "theme_3_pct": 25 },
+	{ "goal_type": "score", "goal_target": 1000, "goal_word_length": 0, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 0.65, "spawn_max": 1.5, "theme_1_pct": 10, "theme_2_pct": 30, "theme_3_pct": 30 },
 	# Stage 3 — Form N words of length L
-	{ "goal_type": "words_of_length", "goal_target": 3, "goal_word_length": 5, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 0.6, "spawn_max": 1.4, "missing_letters": 0 },
-	{ "goal_type": "words_of_length", "goal_target": 5, "goal_word_length": 5, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 0.55, "spawn_max": 1.3, "missing_letters": 0 },
-	{ "goal_type": "words_of_length", "goal_target": 3, "goal_word_length": 6, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 0.5, "spawn_max": 1.2, "missing_letters": 0 },
-	{ "goal_type": "words_of_length", "goal_target": 5, "goal_word_length": 6, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 0.45, "spawn_max": 1.1, "missing_letters": 0 },
-	{ "goal_type": "words_of_length", "goal_target": 3, "goal_word_length": 7, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 0.4, "spawn_max": 1.0, "missing_letters": 0 },
+	{ "goal_type": "words_of_length", "goal_target": 3, "goal_word_length": 5, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 0.6, "spawn_max": 1.4, "theme_1_pct": 10, "theme_2_pct": 25, "theme_3_pct": 35 },
+	{ "goal_type": "words_of_length", "goal_target": 5, "goal_word_length": 5, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 0.55, "spawn_max": 1.3, "theme_1_pct": 5, "theme_2_pct": 25, "theme_3_pct": 40 },
+	{ "goal_type": "words_of_length", "goal_target": 3, "goal_word_length": 6, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 0.5, "spawn_max": 1.2, "theme_1_pct": 5, "theme_2_pct": 20, "theme_3_pct": 45 },
+	{ "goal_type": "words_of_length", "goal_target": 5, "goal_word_length": 6, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 0.45, "spawn_max": 1.1, "theme_1_pct": 0, "theme_2_pct": 20, "theme_3_pct": 50 },
+	{ "goal_type": "words_of_length", "goal_target": 3, "goal_word_length": 7, "letter_count": -1, "fall_speed": 20.0, "spawn_min": 0.4, "spawn_max": 1.0, "theme_1_pct": 0, "theme_2_pct": 15, "theme_3_pct": 55 },
 ]
 
 var current_state: GameState.State = GameState.State.MAIN_MENU
@@ -47,6 +48,12 @@ var is_resuming: bool = false
 var level_words: int = 0
 var level_score: int = 0
 var level_words_of_length: int = 0
+
+# Theme system
+var current_theme_name: String = ""
+var _theme_words: Array = []          # words available in current theme
+var _used_theme_words: Dictionary = {} # word -> true (used this session)
+var _all_themes: Array = []           # loaded from JSON
 
 var _translations: Dictionary = {
 	"WORD CANNON": {"en": "WORD CANNON", "ru": "ТАРАТОР"},
@@ -70,6 +77,7 @@ var _translations: Dictionary = {
 	"YOU WIN!": {"en": "YOU WIN!", "ru": "ПОБЕДА!"},
 	"Words:": {"en": "Words:", "ru": "Слова:"},
 	"-letter words:": {"en": "-letter words:", "ru": "-букв. слова:"},
+	"Theme:": {"en": "Theme:", "ru": "Тема:"},
 }
 
 func tr_text(key: String) -> String:
@@ -79,6 +87,49 @@ func tr_text(key: String) -> String:
 
 func _ready() -> void:
 	get_window().min_size = MIN_WINDOW_SIZE
+
+func load_themes() -> void:
+	var path := "res://assets/data/themes.%s.json" % language
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		push_error("Failed to open themes: " + path)
+		_all_themes = []
+		return
+	var json := JSON.new()
+	var err := json.parse(file.get_as_text())
+	if err != OK:
+		push_error("Failed to parse themes JSON: " + json.get_error_message())
+		_all_themes = []
+		return
+	var data: Dictionary = json.data
+	_all_themes = data.get("themes", [])
+
+func _pick_random_theme() -> void:
+	if _all_themes.is_empty():
+		load_themes()
+	if _all_themes.is_empty():
+		current_theme_name = ""
+		_theme_words = []
+		return
+	var theme: Dictionary = _all_themes[randi() % _all_themes.size()]
+	current_theme_name = theme["name"]
+	_theme_words = theme["words"].duplicate()
+	_used_theme_words.clear()
+	theme_changed.emit(current_theme_name)
+
+func pick_theme_word(min_length: int) -> String:
+	## Pick an unused theme word with length >= min_length. Returns "" if exhausted.
+	var candidates: Array = []
+	for word in _theme_words:
+		if word.length() >= min_length and not _used_theme_words.has(word):
+			# Verify word exists in dictionary
+			if WordDictionary.word_table.has(word):
+				candidates.append(word)
+	if candidates.is_empty():
+		return ""
+	var chosen: String = candidates[randi() % candidates.size()]
+	_used_theme_words[chosen] = true
+	return chosen
 
 func get_play_bounds() -> Vector2:
 	var screen_w: float = get_viewport().get_visible_rect().size.x
@@ -176,6 +227,7 @@ func reset_game() -> void:
 	current_level = 0
 	level_timer = 0.0
 	_reset_level_counters()
+	_pick_random_theme()
 	score_changed.emit(score)
 	level_changed.emit(current_level)
 

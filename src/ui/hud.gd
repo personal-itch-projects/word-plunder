@@ -21,6 +21,7 @@ func _ready() -> void:
 	GameManager.score_changed.connect(_on_score_changed)
 	GameManager.level_changed.connect(_on_level_changed)
 	GameManager.goal_progress_changed.connect(_on_goal_progress_changed)
+	GameManager.theme_changed.connect(_on_theme_changed)
 	_on_score_changed(GameManager.score)
 
 func _process(_delta: float) -> void:
@@ -34,6 +35,9 @@ func _on_level_changed(_level: int) -> void:
 	queue_redraw()
 
 func _on_goal_progress_changed() -> void:
+	queue_redraw()
+
+func _on_theme_changed(_name: String) -> void:
 	queue_redraw()
 
 func _draw() -> void:
@@ -55,6 +59,15 @@ func _draw() -> void:
 	var timer_text := "%d:%02d" % [minutes, seconds]
 	var timer_size := font.get_string_size(timer_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 18)
 	draw_string(font, Vector2(screen_size.x / 2.0 - timer_size.x / 2.0, 62), timer_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 18, Color("#666666"))
+
+	# Theme display (centered, below timer)
+	if not GameManager.current_theme_name.is_empty():
+		var theme_label := GameManager.tr_text("Theme:")
+		var label_size := font.get_string_size(theme_label, HORIZONTAL_ALIGNMENT_CENTER, -1, 18)
+		draw_string(font, Vector2(screen_size.x / 2.0 - label_size.x / 2.0, 90), theme_label, HORIZONTAL_ALIGNMENT_CENTER, -1, 18, Color("#888888"))
+		var theme_name: String = GameManager.current_theme_name
+		var name_size := font_bold.get_string_size(theme_name, HORIZONTAL_ALIGNMENT_CENTER, -1, 24)
+		draw_string(font_bold, Vector2(screen_size.x / 2.0 - name_size.x / 2.0, 118), theme_name, HORIZONTAL_ALIGNMENT_CENTER, -1, 24, Color("#1A1A1A"))
 
 	# Arsenal bubbles (update visibility and draw letters)
 	_update_arsenal_bubbles()

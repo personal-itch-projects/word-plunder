@@ -54,6 +54,7 @@ func _on_language_clicked() -> void:
 	else:
 		GameManager.language = "en"
 	WordDictionary.load_dictionary(GameManager.language)
+	GameManager.load_themes()
 	_rebuild_all()
 
 func _on_back_clicked() -> void:

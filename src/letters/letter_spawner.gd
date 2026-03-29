@@ -30,11 +30,43 @@ func _process(delta: float) -> void:
 
 func _spawn_letter() -> void:
 	var cfg: Dictionary = GameManager.get_level_config()
-	var gaps: int = cfg.get("missing_letters", 0)
-	if gaps > 0:
-		_spawn_partial_word(gaps)
-	else:
-		_spawn_single_letter()
+	var roll := randi() % 100
+	var t1: int = cfg.get("theme_1_pct", 0)
+	var t2: int = cfg.get("theme_2_pct", 0)
+	var t3: int = cfg.get("theme_3_pct", 0)
+
+	if roll < t1:
+		if _spawn_theme_word(1):
+			return
+	elif roll < t1 + t2:
+		if _spawn_theme_word(2):
+			return
+	elif roll < t1 + t2 + t3:
+		if _spawn_theme_word(3):
+			return
+	# Fallback: random single letter
+	_spawn_single_letter()
+
+func _spawn_theme_word(gaps: int) -> bool:
+	var min_len := gaps + WordDictionary.MIN_WORD_LENGTH
+	var word := GameManager.pick_theme_word(min_len)
+	if word.is_empty():
+		return false
+	var kept_letters := WordDictionary.pick_theme_partial_word(word, gaps)
+	if kept_letters.is_empty():
+		return false
+	var x_pos := _find_free_x_position(kept_letters.size())
+	if x_pos < 0:
+		return false
+	var FallingLetterScript := preload("res://src/letters/falling_letter.gd")
+	var letter_nodes: Array[Node2D] = []
+	for letter_char in kept_letters:
+		var letter_node := Node2D.new()
+		letter_node.set_script(FallingLetterScript)
+		letter_node.setup(letter_char, Vector2.ZERO)
+		letter_nodes.append(letter_node)
+	flock_manager.create_flock(letter_nodes, Vector2(x_pos, -30))
+	return true
 
 func _spawn_single_letter() -> void:
 	var x_pos := _find_free_x_position()
@@ -47,23 +79,6 @@ func _spawn_single_letter() -> void:
 	var rand_letter := WordDictionary.pick_weighted_letter(allowed)
 	letter_node.setup(rand_letter, Vector2.ZERO)
 	flock_manager.create_flock([letter_node] as Array[Node2D], Vector2(x_pos, -30))
-
-func _spawn_partial_word(gaps: int) -> void:
-	var kept_letters := WordDictionary.pick_partial_word(gaps)
-	if kept_letters.is_empty():
-		_spawn_single_letter()
-		return
-	var x_pos := _find_free_x_position(kept_letters.size())
-	if x_pos < 0:
-		return
-	var FallingLetterScript := preload("res://src/letters/falling_letter.gd")
-	var letter_nodes: Array[Node2D] = []
-	for letter_char in kept_letters:
-		var letter_node := Node2D.new()
-		letter_node.set_script(FallingLetterScript)
-		letter_node.setup(letter_char, Vector2.ZERO)
-		letter_nodes.append(letter_node)
-	flock_manager.create_flock(letter_nodes, Vector2(x_pos, -30))
 
 func _find_free_x_position(letter_count: int = 1) -> float:
 	const MAX_ATTEMPTS := 10

@@ -320,6 +320,21 @@ func _compute_letter_weights() -> void:
 	chars.sort()
 	_alphabet = "".join(chars).to_upper()
 
+func pick_theme_partial_word(word: String, gaps: int) -> Array[String]:
+	## Given a specific word, remove `gaps` random letter positions and return kept letters (uppercase).
+	if word.length() < gaps + MIN_WORD_LENGTH:
+		return []
+	var all_indices: Array = []
+	for i in word.length():
+		all_indices.append(i)
+	all_indices.shuffle()
+	var remove_indices: Array = all_indices.slice(0, gaps)
+	var kept: Array[String] = []
+	for i in word.length():
+		if not remove_indices.has(i):
+			kept.append(word[i].to_upper())
+	return kept
+
 func pick_partial_word(gaps: int) -> Array[String]:
 	var min_len := gaps + MIN_WORD_LENGTH
 	var candidates: Array = []
