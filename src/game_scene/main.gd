@@ -2,6 +2,8 @@ extends Node2D
 
 @onready var game_layer: Node2D = $GameLayer
 @onready var background: ColorRect = $Background
+var _border_left: Sprite2D
+var _border_right: Sprite2D
 @onready var menu_letter_spawner: Node2D = $GameLayer/MenuLetterSpawner
 @onready var letter_spawner: Node2D = $GameLayer/LetterSpawner
 @onready var flock_manager: Node2D = $GameLayer/FlockManager
@@ -16,11 +18,45 @@ extends Node2D
 func _ready() -> void:
 	_resize_background()
 	get_viewport().size_changed.connect(_resize_background)
+	_setup_borders()
 	GameManager.state_changed.connect(_on_state_changed)
 	_on_state_changed(GameManager.current_state)
 
+func _setup_borders() -> void:
+	var shader := preload("res://src/shaders/border_line.gdshader")
+	var img := Image.create(2, 2, false, Image.FORMAT_RGBA8)
+	img.fill(Color.WHITE)
+	var tex := ImageTexture.create_from_image(img)
+
+	_border_left = Sprite2D.new()
+	_border_left.texture = tex
+	var mat_l := ShaderMaterial.new()
+	mat_l.shader = shader
+	_border_left.material = mat_l
+	game_layer.add_child(_border_left)
+
+	_border_right = Sprite2D.new()
+	_border_right.texture = tex
+	var mat_r := ShaderMaterial.new()
+	mat_r.shader = shader
+	_border_right.material = mat_r
+	game_layer.add_child(_border_right)
+
+	_update_borders()
+
+func _update_borders() -> void:
+	var bounds := GameManager.get_play_bounds()
+	var screen_h: float = get_viewport().get_visible_rect().size.y
+	var border_w := 30.0
+	_border_left.scale = Vector2(border_w, screen_h)
+	_border_left.position = Vector2(bounds.x, screen_h / 2.0)
+	_border_right.scale = Vector2(border_w, screen_h)
+	_border_right.position = Vector2(bounds.y, screen_h / 2.0)
+
 func _resize_background() -> void:
 	background.size = get_viewport().get_visible_rect().size
+	if _border_left:
+		_update_borders()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:

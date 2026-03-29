@@ -232,6 +232,18 @@ func _process(delta: float) -> void:
 	push_velocity = push_velocity.move_toward(Vector2.ZERO, PUSH_DRAG * push_velocity.length() * delta)
 	position += (velocity + push_velocity) * delta
 
+	# Bounce off play area borders
+	var bounds := GameManager.get_play_bounds()
+	var bubble_r_bounds := _get_bubble_radius()
+	if position.x - bubble_r_bounds < bounds.x:
+		position.x = bounds.x + bubble_r_bounds
+		velocity.x = abs(velocity.x)
+		push_velocity.x = abs(push_velocity.x)
+	elif position.x + bubble_r_bounds > bounds.y:
+		position.x = bounds.y - bubble_r_bounds
+		velocity.x = -abs(velocity.x)
+		push_velocity.x = -abs(push_velocity.x)
+
 	# Decay dent
 	if _dent_strength > 0.0:
 		_dent_strength = move_toward(_dent_strength, 0.0, DENT_DECAY * _dent_strength * delta + delta)
