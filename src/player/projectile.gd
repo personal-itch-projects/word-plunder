@@ -20,6 +20,7 @@ var velocity: Vector2 = Vector2(0, -SPEED)
 var flock_manager: Node2D
 var font: Font
 var screen_width: float
+var launched := false
 
 var _trail_timer: float = 0.0
 var _trail_container: Node2D
@@ -33,6 +34,16 @@ func setup(p_letter: String, p_position: Vector2, p_flock_manager: Node2D, p_vel
 	flock_manager = p_flock_manager
 	velocity = p_velocity
 	font = preload("res://assets/fonts/Nunito/Nunito-Regular.ttf")
+	launched = true
+
+func setup_preview(p_letter: String) -> void:
+	letter = p_letter
+	font = preload("res://assets/fonts/Nunito/Nunito-Regular.ttf")
+
+func launch(p_flock_manager: Node2D, p_velocity: Vector2) -> void:
+	flock_manager = p_flock_manager
+	velocity = p_velocity
+	launched = true
 
 func _ready() -> void:
 	screen_width = get_viewport().get_visible_rect().size.x
@@ -93,6 +104,8 @@ func _setup_bubble() -> void:
 	add_child(_bubble_sprite)
 
 func _process(delta: float) -> void:
+	if not launched:
+		return
 	position += velocity * delta
 
 	# Bounce off play area borders

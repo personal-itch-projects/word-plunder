@@ -30,6 +30,7 @@ var screen_width: float
 var arsenal: Array[String] = []
 var font: Font
 var cannon_angle: float = 0.0
+var _loaded_projectile: Node2D
 
 # Wobble state
 var wobble_intensity: float = 0.0
@@ -53,10 +54,12 @@ func _ready() -> void:
 	var bounds := GameManager.get_play_bounds()
 	position = Vector2((bounds.x + bounds.y) / 2.0, screen_height - 50)
 	_fill_arsenal()
+	_create_loaded_projectile()
 	WordDictionary.language_changed.connect(_on_language_changed)
 
 func _on_language_changed(_lang: String) -> void:
 	_fill_arsenal()
+	_recreate_loaded_projectile()
 
 func reset() -> void:
 	var bounds := GameManager.get_play_bounds()
@@ -64,9 +67,11 @@ func reset() -> void:
 	wobble_intensity = 0.0
 	recoil_offset = 0.0
 	squash = 0.0
+	_loaded_projectile = null
 	_fill_arsenal()
 	for child in get_children():
 		child.queue_free()
+	_create_loaded_projectile()
 
 func _process(delta: float) -> void:
 	if GameManager.current_state != GameState.State.PLAYING:
@@ -104,6 +109,13 @@ func _process(delta: float) -> void:
 	# Squash-stretch: compresses on shoot, bounces back
 	squash = move_toward(squash, 0.0, SQUASH_RETURN * delta)
 
+	# Position loaded projectile at cannon tip
+	if _loaded_projectile:
+		var wobble_rot := sin(wobble_time) * wobble_intensity * WOBBLE_MAX_ANGLE
+		var total_angle := cannon_angle + wobble_rot
+		var local_tip := Vector2(0, -CANNON_HEIGHT - MUZZLE_FLARE_H - 10.0 + recoil_offset)
+		_loaded_projectile.position = local_tip.rotated(total_angle)
+
 	queue_redraw()
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -115,25 +127,29 @@ func _unhandled_input(event: InputEvent) -> void:
 		_shoot()
 
 func _shoot() -> void:
-	if arsenal.is_empty():
+	if arsenal.is_empty() or not _loaded_projectile:
 		return
 	recoil_offset = RECOIL_STRENGTH
 	squash = SHOOT_SQUASH
 
-	var shot_letter := arsenal.pop_front() as String
+	arsenal.pop_front()
 	var mouse_pos := get_viewport().get_mouse_position()
-	var cannon_tip := Vector2(position.x, position.y - CANNON_HEIGHT)
-	var dir := (mouse_pos - cannon_tip).normalized()
+	var launch_pos := _loaded_projectile.global_position
+	var dir := (mouse_pos - launch_pos).normalized()
 	if dir.y > -0.1:
 		dir = Vector2(dir.x, -0.1).normalized()
 	var vel := dir * preload("res://src/player/projectile.gd").SPEED
 
-	var ProjectileScript := preload("res://src/player/projectile.gd")
-	var proj := Node2D.new()
-	proj.set_script(ProjectileScript)
-	proj.setup(shot_letter, cannon_tip, flock_manager, vel)
-	get_parent().add_child(proj)
+	# Reparent to game layer and launch
+	var global_pos := _loaded_projectile.global_position
+	remove_child(_loaded_projectile)
+	_loaded_projectile.position = global_pos
+	get_parent().add_child(_loaded_projectile)
+	_loaded_projectile.launch(flock_manager, vel)
+	_loaded_projectile = null
+
 	_append_arsenal_letter()
+	_create_loaded_projectile()
 
 func _fill_arsenal() -> void:
 	arsenal.clear()
@@ -158,12 +174,6 @@ func _draw() -> void:
 	var total_angle := cannon_angle + wobble_rot
 	draw_set_transform(Vector2(0, 0), total_angle, Vector2(scale_x, scale_y))
 	_draw_cannon_body()
-
-	# Letter preview above muzzle
-	if not arsenal.is_empty():
-		var preview_y := -CANNON_HEIGHT - MUZZLE_FLARE_H - 10.0 + recoil_offset
-		var text_size := font.get_string_size(arsenal[0], HORIZONTAL_ALIGNMENT_CENTER, -1, 18)
-		draw_string(font, Vector2(-text_size.x / 2.0, preview_y), arsenal[0], HORIZONTAL_ALIGNMENT_CENTER, -1, 18, color_cannon)
 
 	draw_set_transform(Vector2.ZERO)
 
@@ -216,3 +226,18 @@ func _draw_cannon_body() -> void:
 
 	# Cascabel (ball at bottom)
 	draw_circle(Vector2(0, r + CASCABEL_RADIUS + 2), CASCABEL_RADIUS, c)
+
+func _create_loaded_projectile() -> void:
+	if arsenal.is_empty():
+		return
+	var ProjectileScript := preload("res://src/player/projectile.gd")
+	_loaded_projectile = Node2D.new()
+	_loaded_projectile.set_script(ProjectileScript)
+	_loaded_projectile.setup_preview(arsenal[0])
+	add_child(_loaded_projectile)
+
+func _recreate_loaded_projectile() -> void:
+	if _loaded_projectile:
+		_loaded_projectile.queue_free()
+		_loaded_projectile = null
+	_create_loaded_projectile()
