@@ -4,9 +4,14 @@ const CELL_SIZE := 30.0
 const CELL_GAP := 4.0
 const ARSENAL_FONT_SIZE := 18
 
+const HEART_SIZE := 36.0
+const HEART_GAP := 10.0
+const HEART_BALL_RADIUS := 8.0
+
 var font: Font
 var font_bold: Font
 var screen_size: Vector2
+var _heart_sprites: Array[Sprite2D] = []
 
 @onready var platform: Node2D = get_node("/root/Main/GameLayer/Platform")
 
@@ -14,11 +19,11 @@ func _ready() -> void:
 	font = preload("res://assets/fonts/Nunito/Nunito-Regular.ttf")
 	font_bold = preload("res://assets/fonts/Nunito/Nunito-Bold.ttf")
 	screen_size = get_viewport().get_visible_rect().size
+	_setup_hearts()
 	GameManager.score_changed.connect(_on_score_changed)
 	GameManager.lives_changed.connect(_on_lives_changed)
 	GameManager.level_changed.connect(_on_level_changed)
 	GameManager.goal_progress_changed.connect(_on_goal_progress_changed)
-	# Initial update
 	_on_score_changed(GameManager.score)
 	_on_lives_changed(GameManager.lives)
 
@@ -30,6 +35,11 @@ func _on_score_changed(_score: int) -> void:
 	queue_redraw()
 
 func _on_lives_changed(_lives: int) -> void:
+	for i in _heart_sprites.size():
+		if i < GameManager.lives:
+			_heart_sprites[i].modulate = Color.WHITE
+		else:
+			_heart_sprites[i].modulate = Color(0.4, 0.4, 0.4, 0.5)
 	queue_redraw()
 
 func _on_level_changed(_level: int) -> void:
@@ -58,18 +68,7 @@ func _draw() -> void:
 	var timer_size := font.get_string_size(timer_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 18)
 	draw_string(font, Vector2(screen_size.x / 2.0 - timer_size.x / 2.0, 62), timer_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 18, Color("#666666"))
 
-	# Lives (heart bubbles)
-	var heart_size := 14.0
-	var heart_gap := 6.0
-	var hearts_total_w := GameManager.MAX_LIVES * (heart_size * 2.0) + (GameManager.MAX_LIVES - 1) * heart_gap
-	var heart_start_x := screen_size.x - hearts_total_w - 20.0
-	var heart_y := 30.0
-	for i in GameManager.MAX_LIVES:
-		var cx := heart_start_x + i * (heart_size * 2.0 + heart_gap) + heart_size
-		if i < GameManager.lives:
-			_draw_heart(Vector2(cx, heart_y), heart_size, Color("#E63946"), Color("#FF6B7A"))
-		else:
-			_draw_heart(Vector2(cx, heart_y), heart_size, Color("#CCCCCC"), Color("#DDDDDD"))
+	# Lives are rendered as heart Sprite2D children (set up in _setup_hearts)
 
 	# Arsenal
 	if platform and not platform.arsenal.is_empty():
@@ -105,19 +104,51 @@ func _draw_arsenal() -> void:
 		var ty: float = y + CELL_SIZE / 2.0 + text_size.y / 4.0
 		draw_string(font, Vector2(tx, ty), letter, HORIZONTAL_ALIGNMENT_CENTER, -1, ARSENAL_FONT_SIZE, Color("#1A1A1A"))
 
-func _draw_heart(center: Vector2, size: float, fill_color: Color, highlight_color: Color) -> void:
-	var cx := center.x
-	var cy := center.y
-	var r := size * 0.45
-	# Two filled circles for the lobes
-	draw_circle(Vector2(cx - r, cy), r, fill_color)
-	draw_circle(Vector2(cx + r, cy), r, fill_color)
-	# Triangle to fill the bottom and gap between lobes
-	var tri := PackedVector2Array([
-		Vector2(cx - r * 2.0, cy),
-		Vector2(cx + r * 2.0, cy),
-		Vector2(cx, cy + r * 2.4),
+func _setup_hearts() -> void:
+	var shader := preload("res://src/shaders/metaball_bubble.gdshader")
+	var img := Image.create(2, 2, false, Image.FORMAT_RGBA8)
+	img.fill(Color.WHITE)
+	var tex := ImageTexture.create_from_image(img)
+
+	var gradient := Gradient.new()
+	gradient.offsets = PackedFloat32Array([0.0, 0.15, 0.5, 1.0])
+	gradient.colors = PackedColorArray([
+		Color(1.0, 0.35, 0.40, 0.75),
+		Color(0.95, 0.25, 0.30, 0.65),
+		Color(0.85, 0.18, 0.22, 0.55),
+		Color(0.78, 0.12, 0.18, 0.50),
 	])
-	draw_colored_polygon(tri, fill_color)
-	# Highlight for bubble shine
-	draw_circle(Vector2(cx - r * 0.6, cy - r * 0.4), r * 0.3, highlight_color)
+	var grad_tex := GradientTexture1D.new()
+	grad_tex.gradient = gradient
+
+	# 3 metaballs: left lobe, right lobe, bottom point
+	var lobe_offset := HEART_BALL_RADIUS * 0.7
+	var positions: Array[Vector2] = [
+		Vector2(-lobe_offset, -lobe_offset * 0.3),
+		Vector2(lobe_offset, -lobe_offset * 0.3),
+		Vector2(0.0, lobe_offset * 0.8),
+	]
+
+	var hearts_total_w := GameManager.MAX_LIVES * HEART_SIZE + (GameManager.MAX_LIVES - 1) * HEART_GAP
+	var start_x := screen_size.x - hearts_total_w - 20.0
+
+	for i in GameManager.MAX_LIVES:
+		var sprite := Sprite2D.new()
+		sprite.texture = tex
+		sprite.scale = Vector2(HEART_SIZE, HEART_SIZE)
+		sprite.position = Vector2(start_x + i * (HEART_SIZE + HEART_GAP) + HEART_SIZE * 0.5, 30.0)
+
+		var mat := ShaderMaterial.new()
+		mat.shader = shader
+		mat.set_shader_parameter("ball_count", 3)
+		mat.set_shader_parameter("ball_positions", positions)
+		mat.set_shader_parameter("ball_radius", HEART_BALL_RADIUS)
+		mat.set_shader_parameter("rect_size", Vector2(HEART_SIZE, HEART_SIZE))
+		mat.set_shader_parameter("gradient_tex", grad_tex)
+		mat.set_shader_parameter("caustic_strength", 0.5)
+		mat.set_shader_parameter("caustic_scale", 0.06)
+		mat.set_shader_parameter("caustic_speed", 0.4)
+		sprite.material = mat
+
+		add_child(sprite)
+		_heart_sprites.append(sprite)
