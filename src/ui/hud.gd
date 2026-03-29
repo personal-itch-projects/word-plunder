@@ -11,8 +11,8 @@ var screen_size: Vector2
 @onready var platform: Node2D = get_node("/root/Main/GameLayer/Platform")
 
 func _ready() -> void:
-	font = preload("res://assets/fonts/DM_Sans/DMSans-Regular.ttf")
-	font_bold = preload("res://assets/fonts/DM_Sans/DMSans-Regular.ttf")
+	font = preload("res://assets/fonts/Nunito/Nunito-Regular.ttf")
+	font_bold = preload("res://assets/fonts/Nunito/Nunito-Bold.ttf")
 	screen_size = get_viewport().get_visible_rect().size
 	GameManager.score_changed.connect(_on_score_changed)
 	GameManager.lives_changed.connect(_on_lives_changed)

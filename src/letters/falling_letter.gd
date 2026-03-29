@@ -9,7 +9,7 @@ var font: Font
 var font_size: int = 20
 
 func _ready() -> void:
-	font = preload("res://assets/fonts/DM_Sans/DMSans-Regular.ttf")
+	font = preload("res://assets/fonts/Nunito/Nunito-Regular.ttf")
 	if letter == "":
 		var alphabet := WordDictionary.get_alphabet()
 		letter = alphabet[randi() % alphabet.length()]

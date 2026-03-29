@@ -48,7 +48,7 @@ var color_cannon := Color("#1A1A1A")
 
 func _ready() -> void:
 	screen_width = get_viewport().get_visible_rect().size.x
-	font = preload("res://assets/fonts/DM_Sans/DMSans-Regular.ttf")
+	font = preload("res://assets/fonts/Nunito/Nunito-Regular.ttf")
 	var screen_height: float = get_viewport().get_visible_rect().size.y
 	position = Vector2(screen_width / 2.0, screen_height - 50)
 	_fill_arsenal()

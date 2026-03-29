@@ -3,7 +3,7 @@ extends Node2D
 var font: Font
 
 func _ready() -> void:
-	font = preload("res://assets/fonts/DM_Sans/DMSans-Regular.ttf")
+	font = preload("res://assets/fonts/Nunito/Nunito-Regular.ttf")
 
 func _draw() -> void:
 	var letter_char: String = get_meta("letter")

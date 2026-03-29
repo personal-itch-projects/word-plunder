@@ -12,7 +12,7 @@ var font: Font
 
 func _ready() -> void:
 	screen_size = get_viewport().get_visible_rect().size
-	font = preload("res://assets/fonts/DM_Sans/DMSans-Regular.ttf")
+	font = preload("res://assets/fonts/Nunito/Nunito-Regular.ttf")
 
 func _process(delta: float) -> void:
 	spawn_timer += delta

@@ -11,7 +11,7 @@ var screen_size: Vector2
 var is_final_stage: bool = false
 
 func _ready() -> void:
-	font = preload("res://assets/fonts/DM_Sans/DMSans-Regular.ttf")
+	font = preload("res://assets/fonts/Nunito/Nunito-Regular.ttf")
 	screen_size = get_viewport().get_visible_rect().size
 	var center_x: float = screen_size.x / 2.0
 	var center_y: float = screen_size.y / 2.0
