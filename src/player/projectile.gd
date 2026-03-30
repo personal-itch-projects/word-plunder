@@ -129,6 +129,7 @@ func _process(delta: float) -> void:
 	var hit_flock: Node2D = flock_manager.check_projectile_collision(global_position, letter, target_flock)
 	if hit_flock:
 		flock_manager.add_letter_to_flock(hit_flock, letter, global_position, velocity)
+		SfxManager.play_random(SfxManager.sfx_bubble_merge)
 		queue_free()
 		return
 

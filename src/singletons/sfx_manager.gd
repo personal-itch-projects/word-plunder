@@ -10,10 +10,6 @@ var sfx_bubble_pop: Array[AudioStream] = [
 ]
 var sfx_bubble_pop_word: Array[AudioStream] = [
 	preload("res://assets/sfx/word_pop_1.wav"),
-	preload("res://assets/sfx/word_pop_2.wav"),
-	preload("res://assets/sfx/word_pop_3.wav"),
-	preload("res://assets/sfx/word_pop_4.wav"),
-	preload("res://assets/sfx/word_pop_5.wav"),
 ]
 var sfx_cannon_move: Array[AudioStream] = [
 	preload("res://assets/sfx/cannon_move_1.wav"),
@@ -23,6 +19,9 @@ var sfx_bubble_fire: Array[AudioStream] = [
 	preload("res://assets/sfx/bubble_fire_2.wav"),
 	preload("res://assets/sfx/bubble_fire_3.wav"),
 	preload("res://assets/sfx/bubble_fire_4.wav"),
+]
+var sfx_bubble_merge: Array[AudioStream] = [
+	preload("res://assets/sfx/bubble_merge_1.wav"),
 ]
 var sfx_menu_click: AudioStream = preload("res://assets/sfx/menu-button-clicked-1.wav")
 var sfx_pause_opened: AudioStream = preload("res://assets/sfx/pause-menu-opened-1.wav")
