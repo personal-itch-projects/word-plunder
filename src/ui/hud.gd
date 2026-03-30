@@ -55,15 +55,13 @@ func _draw() -> void:
 	# Score
 	draw_string(font_bold, Vector2(20, 40), GameManager.tr_text("SCORE") + ": " + str(GameManager.score), HORIZONTAL_ALIGNMENT_LEFT, -1, 28, Color("#1A1A1A"))
 
-	# Lives (right of score)
-	var score_text := GameManager.tr_text("SCORE") + ": " + str(GameManager.score)
-	var score_width := font_bold.get_string_size(score_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 28).x
-	var lives_text := "x" + str(GameManager.lives)
-	var lives_color := Color("#CC3333") if GameManager.lives <= 1 else Color("#1A1A1A")
-	draw_string(font_bold, Vector2(20 + score_width + 20, 40), lives_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 28, lives_color)
-
 	# Level
 	draw_string(font_bold, Vector2(20, 70), GameManager.tr_text("LEVEL") + ": " + str(GameManager.current_level + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("#1A1A1A"))
+
+	# Lives (under level)
+	var lives_text := "♥ " + str(GameManager.lives)
+	var lives_color := Color("#CC3333") if GameManager.lives <= 1 else Color("#1A1A1A")
+	draw_string(font_bold, Vector2(20, 95), lives_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, lives_color)
 
 	# Elapsed time (small, center)
 	var elapsed: int = int(GameManager.level_timer)
