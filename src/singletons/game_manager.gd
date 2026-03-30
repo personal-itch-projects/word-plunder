@@ -199,7 +199,7 @@ const VOLUME_STEPS := [1.0, 0.5, 0.0]
 func _apply_bus_volume(bus_name: String, volume: float) -> void:
 	var idx := AudioServer.get_bus_index(bus_name)
 	if idx >= 0:
-		AudioServer.set_bus_volume_db(idx, linear_to_db(maxf(volume, 0.0001)) if volume > 0.0 else -80.0)
+		AudioServer.set_bus_volume_db(idx, linear_to_db(maxf(volume * volume, 0.0001)) if volume > 0.0 else -80.0)
 
 func cycle_music_volume() -> void:
 	var idx := VOLUME_STEPS.find(music_volume)
