@@ -1,6 +1,6 @@
 extends Node
 
-const BUS := "Master"
+const BUS := "SFX"
 
 var sfx_bubble_pop: Array[AudioStream] = [
 	preload("res://assets/sfx/bubble_pop_1.wav"),

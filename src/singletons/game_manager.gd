@@ -21,6 +21,8 @@ var bindings: Dictionary = {
 	"move_right": KEY_D,
 }
 var language: String = "en"
+var music_volume: float = 1.0
+var sfx_volume: float = 1.0
 
 const SPEED_OPTIONS := [1.0, 1.5, 2.0]
 var speed_multiplier: float = 1.0
@@ -49,6 +51,8 @@ var _translations: Dictionary = {
 	"PAUSED": {"en": "PAUSED", "ru": "ПАУЗА"},
 	"CONTINUE": {"en": "CONTINUE", "ru": "ПРОДОЛЖИТЬ"},
 	"HIGH SCORE": {"en": "HIGH SCORE", "ru": "РЕКОРД"},
+	"Music:": {"en": "Music:", "ru": "Музыка:"},
+	"SFX:": {"en": "SFX:", "ru": "Звуки:"},
 }
 
 func tr_text(key: String) -> String:
@@ -61,14 +65,17 @@ var _music_player: AudioStreamPlayer
 
 func _ready() -> void:
 	get_window().min_size = MIN_WINDOW_SIZE
-	_load_high_score()
+	_load_save_data()
 	_crosshair_texture = load("res://assets/ui/crosshair_32.png")
 	_music_player = AudioStreamPlayer.new()
 	_music_player.stream = load("res://assets/music/background_music.mp3")
 	_music_player.stream.loop = true
 	_music_player.volume_db = -6.0
+	_music_player.bus = "Music"
 	_music_player.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(_music_player)
+	_apply_bus_volume("Music", music_volume)
+	_apply_bus_volume("SFX", sfx_volume)
 
 func get_play_bounds() -> Vector2:
 	var screen_w: float = get_viewport().get_visible_rect().size.x
@@ -186,20 +193,49 @@ func cycle_speed() -> void:
 	_speed_index = (_speed_index + 1) % SPEED_OPTIONS.size()
 	speed_multiplier = SPEED_OPTIONS[_speed_index]
 
-const SAVE_PATH := "user://high_score.dat"
+const SAVE_PATH := "user://save_data.dat"
+const VOLUME_STEPS := [1.0, 0.5, 0.0]
+
+func _apply_bus_volume(bus_name: String, volume: float) -> void:
+	var idx := AudioServer.get_bus_index(bus_name)
+	if idx >= 0:
+		AudioServer.set_bus_volume_db(idx, linear_to_db(maxf(volume, 0.0001)) if volume > 0.0 else -80.0)
+
+func cycle_music_volume() -> void:
+	var idx := VOLUME_STEPS.find(music_volume)
+	music_volume = VOLUME_STEPS[(idx + 1) % VOLUME_STEPS.size()]
+	_apply_bus_volume("Music", music_volume)
+	_save_data()
+
+func cycle_sfx_volume() -> void:
+	var idx := VOLUME_STEPS.find(sfx_volume)
+	sfx_volume = VOLUME_STEPS[(idx + 1) % VOLUME_STEPS.size()]
+	_apply_bus_volume("SFX", sfx_volume)
+	_save_data()
 
 func _update_high_score() -> void:
 	if score > high_score:
 		high_score = score
-		_save_high_score()
+		_save_data()
 
-func _save_high_score() -> void:
+func _save_data() -> void:
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
 	if file:
 		file.store_32(high_score)
+		file.store_float(music_volume)
+		file.store_float(sfx_volume)
 
-func _load_high_score() -> void:
+func _load_save_data() -> void:
 	if FileAccess.file_exists(SAVE_PATH):
 		var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+		if file:
+			high_score = file.get_32()
+			if file.get_position() < file.get_length():
+				music_volume = file.get_float()
+			if file.get_position() < file.get_length():
+				sfx_volume = file.get_float()
+	# Also try legacy save file
+	elif FileAccess.file_exists("user://high_score.dat"):
+		var file := FileAccess.open("user://high_score.dat", FileAccess.READ)
 		if file:
 			high_score = file.get_32()
