@@ -2,7 +2,12 @@ extends Node
 
 const BUS := "Master"
 
-var sfx_bubble_pop: AudioStream = preload("res://assets/sfx/bubble-pop-1.wav")
+var sfx_bubble_pop: Array[AudioStream] = [
+	preload("res://assets/sfx/bubble_pop_1.wav"),
+	preload("res://assets/sfx/bubble_pop_2.wav"),
+	preload("res://assets/sfx/bubble_pop_3.wav"),
+	preload("res://assets/sfx/bubble_pop_4.wav"),
+]
 var sfx_bubble_pop_word: AudioStream = preload("res://assets/sfx/bubble-pop-with-existing-word-1.wav")
 var sfx_cannon_move: AudioStream = preload("res://assets/sfx/cannon-move-1.wav")
 var sfx_bubble_fire: Array[AudioStream] = [

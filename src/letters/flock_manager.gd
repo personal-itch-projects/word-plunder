@@ -42,7 +42,7 @@ func _try_click_flock(click_pos: Vector2) -> void:
 				SfxManager.play(SfxManager.sfx_bubble_pop_word)
 			else:
 				flock.pop()
-				SfxManager.play(SfxManager.sfx_bubble_pop)
+				SfxManager.play_random(SfxManager.sfx_bubble_pop)
 			get_viewport().set_input_as_handled()
 			return
 
