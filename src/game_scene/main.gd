@@ -19,6 +19,9 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_resize_background)
 	_setup_borders()
 	GameManager.state_changed.connect(_on_state_changed)
+	# Always start fresh at main menu (prevents browser bfcache restoring mid-game)
+	GameManager.current_state = GameState.State.MAIN_MENU
+	GameManager.reset_game()
 	_on_state_changed(GameManager.current_state)
 
 func _setup_borders() -> void:
