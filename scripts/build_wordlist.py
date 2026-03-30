@@ -102,14 +102,11 @@ def build_english() -> None:
     keep = _apply_cumulative_cutoff(words)
     _write_csv(keep, OUT_DIR / "words.en.csv")
 
-    # Full validation dataset: ENABLE ∪ FrequencyWords (filtered)
+    # Full validation dataset: all ENABLE words, scored by FrequencyWords
     full_words: dict[str, int] = {}
     for w in enable:
         if len(w) >= MIN_LEN and EN_RE.match(w):
             full_words[w] = freq_map.get(w, 1)
-    for w, c in all_words:
-        if w not in full_words and c >= MIN_FREQ_FOR_UNVETTED:
-            full_words[w] = c
     full_list = sorted(full_words.items(), key=lambda x: x[1], reverse=True)
     print(f"[en] Full validation dataset: {len(full_list)} words")
     _write_csv(full_list, OUT_DIR / "words.en.full.csv")
