@@ -218,6 +218,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		if _hovered:
+			SfxManager.play(SfxManager.sfx_menu_click)
 			if _pop_on_click:
 				_pop_and_trigger()
 			else:

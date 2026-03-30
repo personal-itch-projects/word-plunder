@@ -3,15 +3,8 @@ extends Node2D
 const MOVE_SPEED := 400.0
 const CANNON_HEIGHT := 70.0
 
-# Barrel shape
-const MUZZLE_HALF_W := 13.0
-const MUZZLE_FLARE_W := 16.0
+# Muzzle geometry (kept for projectile tip positioning)
 const MUZZLE_FLARE_H := 8.0
-const BASE_HALF_W := 6.0
-const TRUNNION_ARM_W := 18.0
-const TRUNNION_ARM_H := 10.0
-const TRUNNION_BAR_H := 3.0
-const CASCABEL_RADIUS := 5.0
 
 # Jiggle animation
 const WOBBLE_BUILDUP := 10.0
@@ -44,7 +37,8 @@ var recoil_offset: float = 0.0
 # Squash-stretch state (shoot bounce)
 var squash: float = 0.0
 
-var color_cannon := Color("#1A1A1A")
+# 3D ship visual
+var _ship_visual: Node2D
 
 @onready var flock_manager: Node2D = get_parent().get_node("FlockManager")
 
@@ -56,11 +50,18 @@ func _ready() -> void:
 	position = Vector2((bounds.x + bounds.y) / 2.0, screen_height - 50)
 	_fill_arsenal()
 	_create_loaded_projectile()
+	_create_ship_visual()
 	WordDictionary.language_changed.connect(_on_language_changed)
 
 func _on_language_changed(_lang: String) -> void:
 	_fill_arsenal()
 	_recreate_loaded_projectile()
+
+func _create_ship_visual() -> void:
+	var ShipVisual := preload("res://src/player/ship_visual.gd")
+	_ship_visual = Node2D.new()
+	_ship_visual.set_script(ShipVisual)
+	add_child(_ship_visual)
 
 func reset() -> void:
 	var bounds := GameManager.get_play_bounds()
@@ -70,10 +71,12 @@ func reset() -> void:
 	squash = 0.0
 	intro_mode = false
 	_loaded_projectile = null
+	_ship_visual = null
 	_fill_arsenal()
 	for child in get_children():
 		child.queue_free()
 	_create_loaded_projectile()
+	_create_ship_visual()
 
 func _process(delta: float) -> void:
 	if GameManager.current_state != GameState.State.PLAYING:
@@ -90,7 +93,7 @@ func _process(delta: float) -> void:
 			var total_angle := cannon_angle + wobble_rot
 			var local_tip := Vector2(0, -CANNON_HEIGHT - MUZZLE_FLARE_H - 10.0 + recoil_offset)
 			_loaded_projectile.position = local_tip.rotated(total_angle)
-		queue_redraw()
+		_update_ship_visual()
 		return
 
 	# Movement
@@ -104,6 +107,14 @@ func _process(delta: float) -> void:
 	position.x = clampf(position.x, bounds.x + 50.0, bounds.y - 50.0)
 
 	is_moving = direction != 0.0
+	if is_moving:
+		SfxManager.start_cannon_move()
+	else:
+		SfxManager.stop_cannon_move()
+
+	# Ship turn animation
+	if _ship_visual:
+		_ship_visual.set_ship_direction(direction)
 
 	# Cannon angle toward cursor
 	var mouse_pos := get_viewport().get_mouse_position()
@@ -132,7 +143,11 @@ func _process(delta: float) -> void:
 		var local_tip := Vector2(0, -CANNON_HEIGHT - MUZZLE_FLARE_H - 10.0 + recoil_offset)
 		_loaded_projectile.position = local_tip.rotated(total_angle)
 
-	queue_redraw()
+	_update_ship_visual()
+
+func _update_ship_visual() -> void:
+	if _ship_visual:
+		_ship_visual.set_cannon_angle(cannon_angle)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if GameManager.current_state != GameState.State.PLAYING:
@@ -149,6 +164,7 @@ func _shoot() -> void:
 		return
 	recoil_offset = RECOIL_STRENGTH
 	squash = SHOOT_SQUASH
+	SfxManager.play(SfxManager.sfx_arsenal_activated)
 
 	arsenal.pop_front()
 	var mouse_pos := get_viewport().get_mouse_position()
@@ -212,7 +228,6 @@ func _fill_arsenal() -> void:
 			arsenal.append(WordDictionary.pick_weighted_letter(allowed))
 		else:
 			arsenal.append(WordDictionary.pick_slot_aware_letter(flock_data, allowed))
-	queue_redraw()
 
 func _append_arsenal_letter() -> void:
 	var allowed := GameManager.get_allowed_letters()
@@ -221,7 +236,6 @@ func _append_arsenal_letter() -> void:
 		arsenal.append(WordDictionary.pick_weighted_letter(allowed))
 	else:
 		arsenal.append(WordDictionary.pick_slot_aware_letter(flock_data, allowed))
-	queue_redraw()
 
 func _get_flock_letter_arrays() -> Array:
 	var result: Array = []
@@ -233,70 +247,6 @@ func _get_flock_letter_arrays() -> Array:
 			flock_letters.append(l.letter)
 		result.append(flock_letters)
 	return result
-
-func _draw() -> void:
-	# Jiggle rotation from movement wobble
-	var wobble_rot := sin(wobble_time) * wobble_intensity * WOBBLE_MAX_ANGLE
-
-	# Squash-stretch scale: squash compresses Y, stretches X
-	var scale_x := 1.0 + squash + sin(wobble_time) * wobble_intensity * WOBBLE_SQUASH_AMOUNT
-	var scale_y := 1.0 - squash - sin(wobble_time) * wobble_intensity * WOBBLE_SQUASH_AMOUNT * 0.5
-
-	var total_angle := cannon_angle + wobble_rot
-	draw_set_transform(Vector2(0, 0), total_angle, Vector2(scale_x, scale_y))
-	_draw_cannon_body()
-
-	draw_set_transform(Vector2.ZERO)
-
-func _draw_cannon_body() -> void:
-	var r := recoil_offset
-	var h := CANNON_HEIGHT
-	var c := color_cannon
-
-	# Main barrel: tapered from wide muzzle (top) to narrow base (bottom)
-	var barrel := PackedVector2Array([
-		Vector2(-MUZZLE_HALF_W, -h + r),
-		Vector2(MUZZLE_HALF_W, -h + r),
-		Vector2(BASE_HALF_W, r),
-		Vector2(-BASE_HALF_W, r),
-	])
-	draw_colored_polygon(barrel, c)
-
-	# Muzzle flare: wider cap at the top
-	var flare := PackedVector2Array([
-		Vector2(-MUZZLE_FLARE_W, -h + r),
-		Vector2(MUZZLE_FLARE_W, -h + r),
-		Vector2(MUZZLE_HALF_W, -h + MUZZLE_FLARE_H + r),
-		Vector2(-MUZZLE_HALF_W, -h + MUZZLE_FLARE_H + r),
-	])
-	draw_colored_polygon(flare, c)
-
-	# Trunnions: two horizontal bars with rectangular arms at each end
-	# Upper trunnion at ~45% height
-	var ty1 := -h * 0.45 + r
-	# Lower trunnion at ~35% height
-	var ty2 := -h * 0.30 + r
-
-	# Width of barrel at trunnion positions
-	var bw1 := lerpf(BASE_HALF_W, MUZZLE_HALF_W, 0.45)
-	var bw2 := lerpf(BASE_HALF_W, MUZZLE_HALF_W, 0.30)
-
-	# Horizontal bars (full width)
-	var bar_w1 := bw1 + TRUNNION_ARM_W
-	var bar_w2 := bw2 + TRUNNION_ARM_W
-	draw_rect(Rect2(-bar_w1, ty1 - TRUNNION_BAR_H / 2.0, bar_w1 * 2.0, TRUNNION_BAR_H), c)
-	draw_rect(Rect2(-bar_w2, ty2 - TRUNNION_BAR_H / 2.0, bar_w2 * 2.0, TRUNNION_BAR_H), c)
-
-	# Vertical arms at each end (left and right, upper and lower)
-	# Upper trunnion arms
-	draw_rect(Rect2(-bar_w1, ty1 - TRUNNION_ARM_H / 2.0, TRUNNION_ARM_W, TRUNNION_ARM_H), c)
-	draw_rect(Rect2(bar_w1 - TRUNNION_ARM_W, ty1 - TRUNNION_ARM_H / 2.0, TRUNNION_ARM_W, TRUNNION_ARM_H), c)
-	# Lower trunnion arms
-	draw_rect(Rect2(-bar_w2, ty2 - TRUNNION_ARM_H / 2.0, TRUNNION_ARM_W, TRUNNION_ARM_H), c)
-	draw_rect(Rect2(bar_w2 - TRUNNION_ARM_W, ty2 - TRUNNION_ARM_H / 2.0, TRUNNION_ARM_W, TRUNNION_ARM_H), c)
-
-	# Cascabel (ball at bottom)
-	draw_circle(Vector2(0, r + CASCABEL_RADIUS + 2), CASCABEL_RADIUS, c)
 
 func _create_loaded_projectile() -> void:
 	if arsenal.is_empty():

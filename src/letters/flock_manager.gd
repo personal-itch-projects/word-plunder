@@ -39,8 +39,10 @@ func _try_click_flock(click_pos: Vector2) -> void:
 				GameManager.add_score(score)
 				GameManager.on_word_formed(word_len)
 				flock.pop_word(exact["word"])
+				SfxManager.play(SfxManager.sfx_bubble_pop_word)
 			else:
 				flock.pop()
+				SfxManager.play(SfxManager.sfx_bubble_pop)
 			get_viewport().set_input_as_handled()
 			return
 

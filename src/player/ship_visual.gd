@@ -1,0 +1,112 @@
+extends Node2D
+
+## Renders a 3D pirate ship + cannon in a SubViewport and displays it as a Sprite2D.
+## The cannon rotates based on the parent platform's cannon_angle.
+## The ship flips with a 0.1s tween when changing direction.
+
+const VIEWPORT_SIZE := Vector2i(256, 256)
+const SHIP_TURN_DURATION := 0.1
+
+var _viewport: SubViewport
+var _sprite: Sprite2D
+var _camera: Camera3D
+var _ship_node: Node3D
+var _cannon_node: Node3D
+var _ship_root: Node3D  # Root 3D node that holds ship + cannon
+var _current_facing: float = 0.0  # Y rotation of ship (0 = right-facing, PI = left-facing)
+var _turn_tween: Tween
+
+func _ready() -> void:
+	_setup_viewport()
+
+func _setup_viewport() -> void:
+	# Create SubViewport for 3D rendering
+	_viewport = SubViewport.new()
+	_viewport.size = VIEWPORT_SIZE
+	_viewport.transparent_bg = true
+	_viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	_viewport.msaa_3d = SubViewport.MSAA_4X
+	add_child(_viewport)
+
+	# Create 3D scene root
+	_ship_root = Node3D.new()
+	_ship_root.name = "ShipRoot"
+	_viewport.add_child(_ship_root)
+
+	# Add lighting
+	var env := WorldEnvironment.new()
+	var environment := Environment.new()
+	environment.background_mode = Environment.BG_COLOR
+	environment.background_color = Color(0, 0, 0, 0)
+	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	environment.ambient_light_color = Color(0.6, 0.6, 0.65)
+	environment.ambient_light_energy = 0.8
+	env.environment = environment
+	_viewport.add_child(env)
+
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-45, 30, 0)
+	sun.light_energy = 1.2
+	sun.shadow_enabled = false
+	_viewport.add_child(sun)
+
+	# Load ship model
+	var ship_scene := load("res://assets/models/ship-pirate-small.glb") as PackedScene
+	_ship_node = ship_scene.instantiate()
+	_ship_node.name = "Ship"
+	_ship_root.add_child(_ship_node)
+
+	# Load cannon model (mobile version with wheels)
+	var cannon_scene := load("res://assets/models/cannon-mobile.glb") as PackedScene
+	_cannon_node = cannon_scene.instantiate()
+	_cannon_node.name = "Cannon"
+	# Position cannon on the ship deck
+	_cannon_node.position = Vector3(0, 0.55, 0.3)
+	_cannon_node.scale = Vector3(1.3, 1.3, 1.3)
+	# Pitch the cannon barrel upward so it points up (matching 2D cannon direction)
+	_cannon_node.rotation.x = -0.5
+	_ship_root.add_child(_cannon_node)
+
+	# Camera: slightly above and to the side for a 3/4 view
+	_camera = Camera3D.new()
+	_camera.projection = Camera3D.PROJECTION_ORTHOGONAL
+	_camera.size = 3.5
+	_camera.position = Vector3(0, 4.0, 3.0)
+	_camera.rotation_degrees = Vector3(-50, 0, 0)
+	_viewport.add_child(_camera)
+
+	# Sprite2D to display the viewport texture
+	_sprite = Sprite2D.new()
+	_sprite.texture = _viewport.get_texture()
+	# Scale and position so ship appears correctly at platform position
+	_sprite.scale = Vector2(0.65, 0.65)
+	_sprite.position = Vector2(0, -20)
+	add_child(_sprite)
+
+func set_cannon_angle(angle: float) -> void:
+	if _cannon_node:
+		# 2D cannon_angle: 0 = up, positive = right, negative = left
+		# In 3D with camera looking from behind+above, Y-axis rotation sweeps left/right
+		# When ship is flipped (facing left), negate to compensate for parent rotation
+		var compensated := angle if _current_facing < PI * 0.5 else -angle
+		_cannon_node.rotation.y = -compensated
+
+func set_ship_direction(direction: float) -> void:
+	## direction: -1.0 (left), 0.0 (no change), 1.0 (right)
+	if direction == 0.0:
+		return
+	var target_y: float
+	if direction > 0.0:
+		target_y = 0.0  # Facing right
+	else:
+		target_y = PI   # Facing left
+
+	if is_equal_approx(target_y, _current_facing):
+		return
+
+	_current_facing = target_y
+
+	if _turn_tween:
+		_turn_tween.kill()
+	_turn_tween = create_tween()
+	_turn_tween.tween_property(_ship_root, "rotation:y", target_y, SHIP_TURN_DURATION)

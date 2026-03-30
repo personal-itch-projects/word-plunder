@@ -411,6 +411,10 @@ override.cfg
 *.mp3
 *.wav
 *.ogg
+!/assets/sfx/**/*.wav
+
+# 3D Models - textures
+!/assets/models/**/*.png
 
 # Other
 *.exe
