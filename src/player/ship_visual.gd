@@ -79,20 +79,19 @@ func _setup_viewport() -> void:
 				new_mat.albedo_texture = td_colormap
 				barrel.set_surface_override_material(si, new_mat)
 
-	# Pivot node at the barrel base so rotation swings the barrel correctly
+	# Pivot node at the barrel base — rotation swings the barrel in the camera's visible plane
 	_cannon_pivot = Node3D.new()
 	_cannon_pivot.name = "CannonPivot"
-	_cannon_pivot.position = Vector3(0, 1.0, 0.0)
-	_cannon_pivot.scale = Vector3(7.5, 7.5, 7.5)
+	_cannon_pivot.position = Vector3(0, 2.5, 0)
+	_cannon_pivot.scale = Vector3(9.0, 9.0, 9.0)
+	# Point barrel straight up by default (rotate from +Z toward +Y)
+	_cannon_pivot.rotation.x = -PI / 2.0
 	_ship_root.add_child(_cannon_pivot)
 
 	if barrel:
-		# Barrel's original position was (0, 0.383, 0) — offset it so pivot is at its base
-		barrel.position = Vector3(0, 0, 0)
+		# Offset barrel up from pivot so rotation swings from a lower base point
+		barrel.position = Vector3(0, 0, 0.2)
 		_cannon_pivot.add_child(barrel)
-
-	# Pitch the cannon upward
-	_cannon_pivot.rotation.x = -1.0
 
 	# Scale down ship to fit viewport including mast/sail
 	_ship_root.scale = Vector3(0.25, 0.25, 0.25)
@@ -116,9 +115,10 @@ func _setup_viewport() -> void:
 func set_cannon_angle(angle: float) -> void:
 	if _cannon_pivot and not is_equal_approx(angle, _last_cannon_angle):
 		_last_cannon_angle = angle
-		# From side view, cannon sweeps left/right via Z-axis rotation on the pivot
+		# Rotate around X-axis (visible as 2D swing from side camera)
+		# -PI/2 = straight up; adding angle tilts toward the cursor direction
 		var compensated := angle if _current_facing > PI * 0.5 else -angle
-		_cannon_pivot.rotation.z = compensated
+		_cannon_pivot.rotation.x = -PI / 2.0 + compensated
 		_request_update()
 
 func set_ship_direction(direction: float) -> void:
