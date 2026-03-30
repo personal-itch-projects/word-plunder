@@ -20,7 +20,6 @@ func _ready() -> void:
 	_setup_arsenal_bubbles()
 	GameManager.score_changed.connect(_on_score_changed)
 	GameManager.level_changed.connect(_on_level_changed)
-	GameManager.goal_progress_changed.connect(_on_goal_progress_changed)
 	_on_score_changed(GameManager.score)
 
 func _process(_delta: float) -> void:
@@ -33,9 +32,6 @@ func _on_score_changed(_score: int) -> void:
 func _on_level_changed(_level: int) -> void:
 	queue_redraw()
 
-func _on_goal_progress_changed() -> void:
-	queue_redraw()
-
 func _draw() -> void:
 	# Score
 	draw_string(font_bold, Vector2(20, 40), GameManager.tr_text("SCORE") + ": " + str(GameManager.score), HORIZONTAL_ALIGNMENT_LEFT, -1, 28, Color("#1A1A1A"))
@@ -43,13 +39,7 @@ func _draw() -> void:
 	# Level
 	draw_string(font_bold, Vector2(20, 70), GameManager.tr_text("LEVEL") + ": " + str(GameManager.current_level + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("#1A1A1A"))
 
-	# Goal progress (center) — always score target
-	var cfg: Dictionary = GameManager.get_level_config()
-	var goal_text := GameManager.tr_text("Score:") + " " + str(GameManager.level_score) + "/" + str(cfg["score_target"])
-	var goal_size := font_bold.get_string_size(goal_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 28)
-	draw_string(font_bold, Vector2(screen_size.x / 2.0 - goal_size.x / 2.0, 40), goal_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 28, Color("#1A1A1A"))
-
-	# Elapsed time (small, below goal)
+	# Elapsed time (small, center)
 	var elapsed: int = int(GameManager.level_timer)
 	var minutes: int = elapsed / 60
 	var seconds: int = elapsed % 60
