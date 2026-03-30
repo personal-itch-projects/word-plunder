@@ -11,6 +11,7 @@ const MIN_WINDOW_SIZE := Vector2i(960, 540)
 
 var current_state: GameState.State = GameState.State.MAIN_MENU
 var score: int = 0
+var high_score: int = 0
 var current_level: int = 0
 var level_timer: float = 0.0
 var bindings: Dictionary = {
@@ -41,6 +42,7 @@ var _translations: Dictionary = {
 	"MENU": {"en": "MENU", "ru": "МЕНЮ"},
 	"PAUSED": {"en": "PAUSED", "ru": "ПАУЗА"},
 	"CONTINUE": {"en": "CONTINUE", "ru": "ПРОДОЛЖИТЬ"},
+	"HIGH SCORE": {"en": "HIGH SCORE", "ru": "РЕКОРД"},
 }
 
 func tr_text(key: String) -> String:
@@ -50,6 +52,7 @@ func tr_text(key: String) -> String:
 
 func _ready() -> void:
 	get_window().min_size = MIN_WINDOW_SIZE
+	_load_high_score()
 
 func get_play_bounds() -> Vector2:
 	var screen_w: float = get_viewport().get_visible_rect().size.x
@@ -86,6 +89,8 @@ func get_allowed_letters() -> String:
 func change_state(new_state: GameState.State) -> void:
 	previous_state = current_state
 	current_state = new_state
+	if new_state == GameState.State.DEFEAT:
+		_update_high_score()
 	if new_state == GameState.State.PAUSED:
 		get_tree().paused = true
 	elif new_state != GameState.State.SETTINGS:
@@ -120,9 +125,11 @@ func start_game() -> void:
 	change_state(GameState.State.PLAYING)
 
 func restart_game() -> void:
+	_update_high_score()
 	start_game()
 
 func go_to_menu() -> void:
+	_update_high_score()
 	change_state(GameState.State.MAIN_MENU)
 
 func open_settings() -> void:
@@ -135,3 +142,21 @@ func resume_game() -> void:
 	is_resuming = true
 	change_state(GameState.State.PLAYING)
 	is_resuming = false
+
+const SAVE_PATH := "user://high_score.dat"
+
+func _update_high_score() -> void:
+	if score > high_score:
+		high_score = score
+		_save_high_score()
+
+func _save_high_score() -> void:
+	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	if file:
+		file.store_32(high_score)
+
+func _load_high_score() -> void:
+	if FileAccess.file_exists(SAVE_PATH):
+		var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+		if file:
+			high_score = file.get_32()

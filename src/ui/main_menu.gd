@@ -71,6 +71,12 @@ func _draw() -> void:
 	var title_size := font_bold.get_string_size(title_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 52)
 	draw_string(font_bold, Vector2(screen_size.x / 2.0 - title_size.x / 2.0, screen_size.y / 2.0 - 100), title_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 52, Color("#1A1A1A"))
 
+	# High score
+	if GameManager.high_score > 0:
+		var hs_text := GameManager.tr_text("HIGH SCORE") + ": " + str(GameManager.high_score)
+		var hs_size := font.get_string_size(hs_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 22)
+		draw_string(font, Vector2(screen_size.x / 2.0 - hs_size.x / 2.0, screen_size.y / 2.0 - 60), hs_text, HORIZONTAL_ALIGNMENT_CENTER, -1, 22, Color("#666666"))
+
 func _draw_lang_button(rect: Rect2, text: String, active: bool, hovered: bool) -> void:
 	var bg_color := Color("#1A1A1A") if active else Color.WHITE
 	var text_color := Color.WHITE if active else Color("#1A1A1A")
