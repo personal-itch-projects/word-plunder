@@ -100,7 +100,8 @@ func _on_state_changed(new_state: GameState.State) -> void:
 		GameState.State.PAUSED:
 			pause_menu.visible = true
 			hud.visible = true
-			SfxManager.play(SfxManager.sfx_pause_opened)
+			if GameManager.previous_state == GameState.State.PLAYING:
+				SfxManager.play(SfxManager.sfx_pause_opened)
 
 	if new_state != GameState.State.PLAYING:
 		SfxManager.stop_cannon_move()

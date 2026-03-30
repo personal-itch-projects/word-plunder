@@ -22,6 +22,10 @@ func _ready() -> void:
 
 func _on_visibility_changed() -> void:
 	if visible:
+		continue_bubble.rebuild(GameManager.tr_text("CONTINUE"))
+		restart_bubble.rebuild(GameManager.tr_text("RESTART"))
+		settings_bubble.rebuild(GameManager.tr_text("SETTINGS"))
+		menu_bubble.rebuild(GameManager.tr_text("MENU"))
 		for bubble in [continue_bubble, restart_bubble, settings_bubble, menu_bubble]:
 			if bubble:
 				bubble.reset_state()
@@ -35,9 +39,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 
 func _draw() -> void:
-	# Overlay
-	draw_rect(Rect2(Vector2.ZERO, screen_size), Color(0, 0, 0, 0.6))
-
 	# Title
 	var title := GameManager.tr_text("PAUSED")
 	var title_size := font.get_string_size(title, HORIZONTAL_ALIGNMENT_CENTER, -1, 52)
