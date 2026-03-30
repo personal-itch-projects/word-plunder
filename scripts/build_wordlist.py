@@ -18,6 +18,25 @@ MIN_FREQ_FOR_UNVETTED = 50  # minimum frequency for words not in curated diction
 EN_RE = re.compile(r"^[a-z]+$")
 RU_RE = re.compile(r"^[а-яё]+$")
 
+# Profanity filter: root patterns that match obscene words
+EN_PROFANITY_ROOTS = re.compile(
+    r"(fuck|shit|cunt|cock(?!ade|atoo|atiel|erel|le|ney|pit|roach|tail)"
+    r"|dick(?!ens|ey|ie)|bitch|whore|slut|nigger|nigga|faggot|fag(?!ot)"
+    r"|wank|twat|asshole|bolloc|piss(?!ton)|pussy(?!cat|foot|willow)"
+    r"|tit(?:s|ty|ties)$|damn|bastard)"
+)
+RU_PROFANITY_ROOTS = re.compile(
+    r"(хуй|хуя|хуе|хуи|хуё|блять|блядь|бляд|ебат|ебан|ебал|ебл|ёб[а-я]"
+    r"|пизд|мудак|мудач|мудо|гандон|залуп(?!ить)|манда(?!рин|т|олин)|дрочи|дрочен"
+    r"|жоп|сран|сука|суки|сукин|шлюх|падл|пидор|пидар)"
+)
+
+
+def _is_profane(word: str, lang: str) -> bool:
+    """Check if a word matches profanity patterns."""
+    pattern = EN_PROFANITY_ROOTS if lang == "en" else RU_PROFANITY_ROOTS
+    return bool(pattern.search(word))
+
 FREQ_EN_URL = "https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/en/en_full.txt"
 ENABLE_URL = "https://raw.githubusercontent.com/dolph/dictionary/master/enable1.txt"
 FREQ_RU_URL = "https://raw.githubusercontent.com/hermitdave/FrequencyWords/master/content/2018/ru/ru_full.txt"
@@ -69,7 +88,9 @@ def _apply_cumulative_cutoff(words: list[tuple[str, int]]) -> list[tuple[str, in
     return keep
 
 
-def _write_csv(words: list[tuple[str, int]], path: Path) -> None:
+def _write_csv(words: list[tuple[str, int]], path: Path, lang: str = "") -> None:
+    if lang:
+        words = [(w, c) for w, c in words if not _is_profane(w, lang)]
     with open(path, "w", encoding="utf-8") as f:
         f.write("Word,FREQcount\n")
         for word, count in words:
@@ -100,7 +121,7 @@ def build_english() -> None:
     words = [(w, c) for w, c in all_words if w in enable]
     print(f"[en] Parsed {len(all_words)} valid words, {len(words)} in ENABLE")
     keep = _apply_cumulative_cutoff(words)
-    _write_csv(keep, OUT_DIR / "words.en.csv")
+    _write_csv(keep, OUT_DIR / "words.en.csv", "en")
 
     # Full validation dataset: all ENABLE words, scored by FrequencyWords
     full_words: dict[str, int] = {}
@@ -109,7 +130,7 @@ def build_english() -> None:
             full_words[w] = freq_map.get(w, 1)
     full_list = sorted(full_words.items(), key=lambda x: x[1], reverse=True)
     print(f"[en] Full validation dataset: {len(full_list)} words")
-    _write_csv(full_list, OUT_DIR / "words.en.full.csv")
+    _write_csv(full_list, OUT_DIR / "words.en.full.csv", "en")
 
 
 # --- Russian ---
@@ -160,9 +181,9 @@ def build_russian(skip_ozhegov: bool = False) -> None:
         words = _parse_freq_lines(raw, RU_RE, normalise=normalise_ru)
         print(f"[ru] Parsed {len(words)} valid words (no Ozhegov filter)")
         keep = _apply_cumulative_cutoff(words)
-        _write_csv(keep, OUT_DIR / "words.ru.csv")
+        _write_csv(keep, OUT_DIR / "words.ru.csv", "ru")
         # Full dataset same as spawn when no Ozhegov
-        _write_csv(words, OUT_DIR / "words.ru.full.csv")
+        _write_csv(words, OUT_DIR / "words.ru.full.csv", "ru")
         return
 
     # Primary source: Ozhegov dictionary
@@ -185,7 +206,7 @@ def build_russian(skip_ozhegov: bool = False) -> None:
 
     print(f"[ru] {len(words)} Ozhegov words (>={MIN_LEN} chars), "
           f"{sum(1 for _, f in words if f > DEFAULT_FREQ)} with frequency data")
-    _write_csv(words, OUT_DIR / "words.ru.csv")
+    _write_csv(words, OUT_DIR / "words.ru.csv", "ru")
 
     # Full validation dataset: Ozhegov ∪ FrequencyWords (filtered)
     full_words: dict[str, int] = {}
@@ -197,7 +218,7 @@ def build_russian(skip_ozhegov: bool = False) -> None:
             full_words[w] = c
     full_list = sorted(full_words.items(), key=lambda x: x[1], reverse=True)
     print(f"[ru] Full validation dataset: {len(full_list)} words")
-    _write_csv(full_list, OUT_DIR / "words.ru.full.csv")
+    _write_csv(full_list, OUT_DIR / "words.ru.full.csv", "ru")
 
 
 if __name__ == "__main__":
