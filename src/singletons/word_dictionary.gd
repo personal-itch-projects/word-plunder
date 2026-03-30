@@ -162,7 +162,6 @@ func _sort_letters(word: String) -> String:
 func _trie_dfs_exact(node: Dictionary, budget: Dictionary, depth: int, target_len: int) -> void:
 	# Kept for compatibility but no longer used by find_exact_word
 	if depth == target_len:
-	if depth == target_len:
 		if not node["w"].is_empty():
 			var freq: int = word_table[node["w"]]
 			var weight: float = float(freq)

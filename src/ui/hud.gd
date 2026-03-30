@@ -61,7 +61,7 @@ func _draw() -> void:
 	draw_string(font_bold, Vector2(20, 70), GameManager.tr_text("LEVEL") + ": " + str(GameManager.current_level + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("#1A1A1A"))
 
 	# Lives (under level)
-	var lives_text := "♥ " + str(GameManager.lives)
+	var lives_text := "HP: " + str(GameManager.lives)
 	var lives_color := Color("#CC3333") if GameManager.lives <= 1 else Color("#1A1A1A")
 	draw_string(font_bold, Vector2(20, 95), lives_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 22, lives_color)
 
