@@ -143,6 +143,19 @@ func set_ship_direction(direction: float) -> void:
 	_turn_tween.tween_property(_ship_root, "rotation:y", target_y, SHIP_TURN_DURATION)
 	_turn_tween.tween_callback(func(): _viewport.render_target_update_mode = SubViewport.UPDATE_ONCE)
 
+func get_cannon_pivot_local() -> Vector2:
+	## Returns the 2D local position of the cannon pivot (relative to this node).
+	if not _camera or not _cannon_pivot:
+		return Vector2.ZERO
+	# Get the 3D world position of the cannon pivot
+	var pivot_world: Vector3 = _cannon_pivot.global_position
+	# Project to viewport coordinates
+	var vp_pos: Vector2 = _camera.unproject_position(pivot_world)
+	# Convert viewport coords (0..256) to sprite local coords
+	# Sprite is centered, so viewport center (128,128) = sprite origin
+	var local_pos := (vp_pos - Vector2(VIEWPORT_SIZE) / 2.0) * _sprite.scale + _sprite.position
+	return local_pos
+
 func _request_update() -> void:
 	if _viewport:
 		_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE

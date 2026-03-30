@@ -1,10 +1,7 @@
 extends Node2D
 
 const MOVE_SPEED := 400.0
-const CANNON_HEIGHT := 70.0
-
-# Muzzle geometry (kept for projectile tip positioning)
-const MUZZLE_FLARE_H := 8.0
+const BARREL_TIP_DISTANCE := 78.0  # Distance from cannon pivot to barrel tip in 2D pixels
 
 # Jiggle animation
 const WOBBLE_BUILDUP := 10.0
@@ -91,8 +88,8 @@ func _process(delta: float) -> void:
 		if _loaded_projectile:
 			var wobble_rot := sin(wobble_time) * wobble_intensity * WOBBLE_MAX_ANGLE
 			var total_angle := cannon_angle + wobble_rot
-			var local_tip := Vector2(0, -CANNON_HEIGHT - MUZZLE_FLARE_H - 10.0 + recoil_offset)
-			_loaded_projectile.position = local_tip.rotated(total_angle)
+			var local_tip := _get_cannon_tip(total_angle)
+			_loaded_projectile.position = local_tip
 		_update_ship_visual()
 		return
 
@@ -140,8 +137,8 @@ func _process(delta: float) -> void:
 	if _loaded_projectile:
 		var wobble_rot := sin(wobble_time) * wobble_intensity * WOBBLE_MAX_ANGLE
 		var total_angle := cannon_angle + wobble_rot
-		var local_tip := Vector2(0, -CANNON_HEIGHT - MUZZLE_FLARE_H - 10.0 + recoil_offset)
-		_loaded_projectile.position = local_tip.rotated(total_angle)
+		var local_tip := _get_cannon_tip(total_angle)
+		_loaded_projectile.position = local_tip
 
 	_update_ship_visual()
 
@@ -192,7 +189,16 @@ func set_arsenal(letters: Array[String]) -> void:
 func get_muzzle_position() -> Vector2:
 	if _loaded_projectile:
 		return _loaded_projectile.global_position
-	return global_position + Vector2(0, -CANNON_HEIGHT)
+	return global_position + _get_cannon_tip(cannon_angle)
+
+func _get_cannon_tip(angle: float) -> Vector2:
+	## Returns the 2D position of the cannon barrel tip, relative to platform origin.
+	## Rotates around the cannon's visual pivot, not the platform origin.
+	var pivot := Vector2.ZERO
+	if _ship_visual:
+		pivot = _ship_visual.get_cannon_pivot_local()
+	var offset := Vector2(0, -BARREL_TIP_DISTANCE).rotated(angle)
+	return pivot + offset
 
 func auto_shoot(vel: Vector2, target: Node2D = null) -> void:
 	if arsenal.is_empty() or not _loaded_projectile:
@@ -216,8 +222,8 @@ func auto_shoot(vel: Vector2, target: Node2D = null) -> void:
 	_create_loaded_projectile()
 	# Position new projectile immediately at cannon tip
 	if _loaded_projectile:
-		var local_tip := Vector2(0, -CANNON_HEIGHT - MUZZLE_FLARE_H - 10.0 + recoil_offset)
-		_loaded_projectile.position = local_tip.rotated(cannon_angle)
+		var local_tip := _get_cannon_tip(cannon_angle)
+		_loaded_projectile.position = local_tip
 
 func _fill_arsenal() -> void:
 	arsenal.clear()
